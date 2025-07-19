@@ -6,11 +6,14 @@ import {
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+// app/_layout.tsx
+import { store } from '@/store'; // 确保路径正确
+import { Provider } from 'react-redux';
 
 import { SafeAreaProvider } from 'react-native-safe-area-context'; // ✅ 引入 SafeAreaProvider
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import Home from './home';
+import AppNavigator from './navigator';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -25,14 +28,12 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <Provider store={store}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        {/* <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack> */}
-        <Home />
+        <AppNavigator />
         <StatusBar style="auto" />
       </ThemeProvider>
+      </Provider>
     </SafeAreaProvider>
   );
 }
