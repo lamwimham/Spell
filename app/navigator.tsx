@@ -4,8 +4,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+
 // 页面导入
 
+import MD3TabBar from '@/components/MD3TarBar';
 import HomePage from './main/home/page';
 import PosterPage from './main/poster/page';
 import RecordPage from './main/record/page';
@@ -21,7 +23,7 @@ const Tab = createBottomTabNavigator();
 // Home导航栈
 function HomeStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName='HomePage' screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomePage" component={HomePage} />
     </Stack.Navigator>
   );
@@ -30,7 +32,7 @@ function HomeStack() {
 // Spell导航栈
 function SpellStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName='SpellPage' screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SpellPage" component={SpellPage} />
       <Stack.Screen name="RecordPage" component={RecordPage} />
       <Stack.Screen name="PosterPage" component={PosterPage} />
@@ -41,32 +43,53 @@ function SpellStack() {
 // Profile中心导航栈
 function ProfileStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName='ProfilePage' screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfilePage" component={ProfilePage} options={{title: 'Profile'}} />
       <Stack.Screen name="CalendarPage" component={CalendarPage} />
     </Stack.Navigator>
   );
 }
 
-// 底部 Tab 导航
+// /src/app/navigator.tsx
+
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = '';
-
-          if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
-          else if (route.name === 'Spell') iconName = focused ? 'sparkles' : 'sparkles-outline';
-          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-      })}
+      tabBar={(props) => <MD3TabBar {...props} />} // 使用自定义 TabBar
     >
-      <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
-      <Tab.Screen name="Spell" component={SpellStack} options={{ headerShown: false }} />
-      <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
+      <Tab.Screen 
+        name="Home"
+        component={HomeStack}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Spell"
+        component={SpellStack}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Spell',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'sparkles' : 'sparkles-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'My',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }

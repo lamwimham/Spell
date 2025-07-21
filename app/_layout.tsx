@@ -1,19 +1,19 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from '@react-navigation/native';
+import { } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
+import { MD3LightTheme as DefaultTheme, PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 // app/_layout.tsx
 import { store } from '@/store'; // 确保路径正确
 import { Provider } from 'react-redux';
 
+import { enableScreens } from 'react-native-screens';
+
 import { SafeAreaProvider } from 'react-native-safe-area-context'; // ✅ 引入 SafeAreaProvider
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import AppNavigator from './navigator';
+enableScreens();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -29,10 +29,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <Provider store={store}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <PaperProvider theme={DefaultTheme}>
+      {/* <PaperProvider theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}> */}
         <AppNavigator />
         <StatusBar style="auto" />
-      </ThemeProvider>
+      </PaperProvider>
       </Provider>
     </SafeAreaProvider>
   );

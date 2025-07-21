@@ -1,85 +1,426 @@
-// HomePage.tsx
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
-import { Button, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { useSelector } from 'react-redux';
-
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { RootState } from '@/store';
-import { Spell } from '../../../store/spellSlice';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Card, FAB, Searchbar, Text, useTheme } from 'react-native-paper';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 type RootStackParamList = {
-  MainTabs: { screen: string, params: {screen: string} };
+  MainTabs: { screen: string; params: { screen: string; params?: any } };
   // Add other routes here if needed
 };
-
 export default function HomePage() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  // const dispatch = useDispatch();
-
-  // 从 Redux 获取咒语列表
-  const spells = useSelector((state: RootState) => state.spellsReducer.spells);
-
-const handleCreateNewSpell = () => {
-  navigation.navigate('MainTabs', {
-    screen: 'Spell',
-    params: {
-      screen: 'SpellPage',
-    },
-  });
-};
-
-  const handleViewSpell = (spell: Spell) => {
-    // 可选：跳转到详情页
-    // navigation.navigate('SpellDetailPage', { spellId: spell.id });
+  const theme = useTheme();
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const handleCreateNewSpell = () => {
+    navigation.navigate('MainTabs', {
+      screen: 'Spell',
+      params: {
+        screen: 'PosterPage',
+      },
+    });
   };
-
   return (
-    <ThemedView style={styles.container}>
-      {spells.length === 0 ? (
-        <ThemedView style={styles.emptyContainer}>
-          <ThemedText style={styles.emptyText}>You haven&apos;t created any spells yet</ThemedText>
-          <Button title="Create Your First Spell" onPress={handleCreateNewSpell} />
-        </ThemedView>
-      ) : (
-        <FlatList
-          data={spells}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.spellItem} onPress={() => handleViewSpell(item)}>
-              <ThemedText style={styles.spellName}>{item.name}</ThemedText>
-              <ThemedText>{item.description}</ThemedText>
-            </TouchableOpacity>
-          )}
+    <SafeAreaView
+      style={[{ backgroundColor: theme.colors.background }, styles.container]}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false} // 可选：隐藏滚动条
+      >
+        <Searchbar
+          placeholder='Search'
+          placeholderTextColor={theme.colors.onSurfaceDisabled}
+          onChangeText={setSearchQuery}
+          value={searchQuery}
+          style={[styles.searchbar]}
         />
-      )}
-    </ThemedView>
+        {/* <ThemedText style={styles.title}>CalendarPage</ThemedText> */}
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+            },
+          ]}
+        >
+          <Card.Title
+            title='duration: 10:41'
+            titleStyle={[
+              theme.fonts.labelSmall,
+              { color: theme.colors.onSurfaceDisabled },
+            ]}
+            subtitleStyle={[theme.fonts.labelLarge]}
+            subtitle='Heath Club'
+            right={(props) => (
+              <TouchableOpacity
+                hitSlop={{top:10, bottom:10, left: 10, right:10}}
+                activeOpacity={1}
+                style={{ backgroundColor: 'transparent' }}
+                onPress={() => {console.log('share')}}
+              >
+                <Ionicons
+                  {...props}
+                  name='play-circle-outline'
+                  size={32}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          />
+          <Card.Content>
+            <Text
+              variant='titleLarge'
+              selectionColor={theme.colors.primary}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              style={[
+                theme.fonts.bodyMedium,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Card title: Morning Fitness Routine — duration: 10:41. This
+              session includes warm-up, strength training, and cool-down
+              exercises. Performed at the Heath Club with a personal trainer.{' '}
+            </Text>
+          </Card.Content>
+        </Card>
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+            },
+          ]}
+        >
+          <Card.Title
+            title='duration: 10:41'
+            titleStyle={[
+              theme.fonts.labelSmall,
+              { color: theme.colors.onSurfaceDisabled },
+            ]}
+            subtitleStyle={[theme.fonts.labelLarge]}
+            subtitle='Heath Club'
+            right={(props) => (
+              <TouchableOpacity
+                hitSlop={{top:10, bottom:10, left: 10, right:10}}
+                activeOpacity={1}
+                style={{ backgroundColor: 'transparent' }}
+                onPress={() => {console.log('share')}}
+              >
+                <Ionicons
+                  {...props}
+                  name='play-circle-outline'
+                  size={32}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          />
+          <Card.Content>
+            <Text
+              variant='titleLarge'
+              selectionColor={theme.colors.primary}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              style={[
+                theme.fonts.bodyMedium,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Card title,Card titleCard titleCard titleCard{' '}
+            </Text>
+          </Card.Content>
+        </Card>
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+            },
+          ]}
+        >
+          <Card.Title
+            title='duration: 10:41'
+            titleStyle={[
+              theme.fonts.labelSmall,
+              { color: theme.colors.onSurfaceDisabled },
+            ]}
+            subtitleStyle={[theme.fonts.labelLarge]}
+            subtitle='Heath Club'
+            right={(props) => (
+              <TouchableOpacity
+                hitSlop={{top:10, bottom:10, left: 10, right:10}}
+                activeOpacity={1}
+                style={{ backgroundColor: 'transparent' }}
+                onPress={() => {console.log('share')}}
+              >
+                <Ionicons
+                  {...props}
+                  name='play-circle-outline'
+                  size={32}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          />
+          <Card.Content>
+            <Text
+              variant='titleLarge'
+              selectionColor={theme.colors.primary}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              style={[
+                theme.fonts.bodyMedium,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Card title,Card titleCard titleCard titleCard{' '}
+            </Text>
+          </Card.Content>
+        </Card>
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+            },
+          ]}
+        >
+          <Card.Title
+            title='duration: 10:41'
+            titleStyle={[
+              theme.fonts.labelSmall,
+              { color: theme.colors.onSurfaceDisabled },
+            ]}
+            subtitleStyle={[theme.fonts.labelLarge]}
+            subtitle='Heath Club'
+            right={(props) => (
+              <TouchableOpacity
+                hitSlop={{top:10, bottom:10, left: 10, right:10}}
+                activeOpacity={1}
+                style={{ backgroundColor: 'transparent' }}
+                onPress={() => {console.log('share')}}
+              >
+                <Ionicons
+                  {...props}
+                  name='play-circle-outline'
+                  size={32}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          />
+          <Card.Content>
+            <Text
+              variant='titleLarge'
+              selectionColor={theme.colors.primary}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              style={[
+                theme.fonts.bodyMedium,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Card title,Card titleCard titleCard titleCard{' '}
+            </Text>
+          </Card.Content>
+        </Card>
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+            },
+          ]}
+        >
+          <Card.Title
+            title='duration: 10:41'
+            titleStyle={[
+              theme.fonts.labelSmall,
+              { color: theme.colors.onSurfaceDisabled },
+            ]}
+            subtitleStyle={[theme.fonts.labelLarge]}
+            subtitle='Heath Club'
+            right={(props) => (
+              <TouchableOpacity
+                hitSlop={{top:10, bottom:10, left: 10, right:10}}
+                activeOpacity={1}
+                style={{ backgroundColor: 'transparent' }}
+                onPress={() => {console.log('share')}}
+              >
+                <Ionicons
+                  {...props}
+                  name='play-circle-outline'
+                  size={32}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          />
+          <Card.Content>
+            <Text
+              variant='titleLarge'
+              selectionColor={theme.colors.primary}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              style={[
+                theme.fonts.bodyMedium,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Card title,Card titleCard titleCard titleCard{' '}
+            </Text>
+          </Card.Content>
+        </Card>
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+            },
+          ]}
+        >
+          <Card.Title
+            title='duration: 10:41'
+            titleStyle={[
+              theme.fonts.labelSmall,
+              { color: theme.colors.onSurfaceDisabled },
+            ]}
+            subtitleStyle={[theme.fonts.labelLarge]}
+            subtitle='Heath Club'
+            right={(props) => (
+              <TouchableOpacity
+                hitSlop={{top:10, bottom:10, left: 10, right:10}}
+                activeOpacity={1}
+                style={{ backgroundColor: 'transparent' }}
+                onPress={() => {console.log('share')}}
+              >
+                <Ionicons
+                  {...props}
+                  name='play-circle-outline'
+                  size={32}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          />
+          <Card.Content>
+            <Text
+              variant='titleLarge'
+              selectionColor={theme.colors.primary}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              style={[
+                theme.fonts.bodyMedium,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Card title,Card titleCard titleCard titleCard{' '}
+            </Text>
+          </Card.Content>
+        </Card>
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+            },
+          ]}
+        >
+          <Card.Title
+            title='duration: 10:41'
+            titleStyle={[
+              theme.fonts.labelSmall,
+              { color: theme.colors.onSurfaceDisabled },
+            ]}
+            subtitleStyle={[theme.fonts.labelLarge]}
+            subtitle='Heath Club'
+            right={(props) => (
+              <TouchableOpacity
+                hitSlop={{top:10, bottom:10, left: 10, right:10}}
+                activeOpacity={1}
+                style={{ backgroundColor: 'transparent' }}
+                onPress={() => {console.log('share')}}
+              >
+                <Ionicons
+                  {...props}
+                  name='play-circle-outline'
+                  size={32}
+                  color={theme.colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          />
+          <Card.Content>
+            <Text
+              variant='titleLarge'
+              selectionColor={theme.colors.primary}
+              numberOfLines={2}
+              ellipsizeMode='tail'
+              style={[
+                theme.fonts.bodyMedium,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Card title,Card titleCard titleCard titleCard{' '}
+            </Text>
+          </Card.Content>
+        </Card>
+      </ScrollView>
+      <FAB
+        style={styles.fab}
+        icon={() => (
+          <Ionicons name='sparkles' size={24} color={theme.colors.onSurface} />
+        )} // 使用 FontAwesome 的 rocket 图标
+        onPress={handleCreateNewSpell}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    // marginHorizontal: 8,
+    // paddingVertical: 16,x
+    padding: 8,
+    // paddingHorizontal: 16,
+    // backgroundColor: 'red'
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  scrollContent: {
+    padding: 8,
+    paddingBottom: 80, // 避免内容被 FAB 挡住（可选）
   },
-  emptyText: {
-    fontSize: 18,
-    marginBottom: 16,
+  searchbar: {
+    margin: 8,
+    // paddingHorizontal: 8,
   },
-  spellItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+  card: {
+    marginVertical: 16,
+    marginHorizontal: 8,
+    paddingHorizontal: 8,
+    borderRadius: 12, // 可选：MD3 推荐圆角 12px
+    backgroundColor: 'red',
   },
-  spellName: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  fab: {
+    position: 'absolute',
+    right: 16,
+    bottom: 16,
   },
 });
