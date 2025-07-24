@@ -6,6 +6,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 export type Spell = {
   id: string;
   name: string;
+  uri: string;
   description: string;
   createdAt: string; // ISO date string
 };
@@ -27,6 +28,7 @@ const spellSlice = createSlice({
   reducers: {
     // 添加一个咒语
     addSpell: (state, action: PayloadAction<Spell>) => {
+      console.log('addSpell', action.payload);
       state.spells.push(action.payload);
     },
 

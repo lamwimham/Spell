@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { memo, useCallback, useState } from 'react';
 import { Dimensions, SafeAreaView, StyleSheet, View } from 'react-native';
 import { Button, Card, Text, TextInput, useTheme } from 'react-native-paper';
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
@@ -6,28 +8,17 @@ import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
 // Constants for tab modes
 const AI_MODE = 'AI Mode';
 const MANUAL_MODE = 'Manual Mode';
-const DRAFT_MODE = 'Drafts';
+type StackParamList = {
+  [key:string]: any;
+};
+// 独立 AI 标签页组件
+const AIRoute = memo(function AIRoute() {
+  const theme = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<StackParamList>>();
+  const [goal, setGoal] = useState('');
+  const [selectedSpell, setSelectedSpell] = useState('');
 
-const SpellPage = () => {
-  const theme = useTheme(); // Access theme from React Native Paper
-  const [index, setIndex] = useState(0); // State for current tab index
-  const [routes] = useState([
-    // Tab routes configuration
-    { key: 'ai', title: AI_MODE },
-    { key: 'manual', title: MANUAL_MODE },
-    { key: 'draft', title: DRAFT_MODE },
-  ]);
-
-  const [goal, setGoal] = useState(''); // State for user's wish/goal
-  const [manualSpells, setManualSpells] = useState(''); // State for manually entered spells
-  const [selectedSpell, setSelectedSpell] = useState(''); // State for AI-generated spell
-
-  /**
-   * Handles the generation of a spell using a simulated AI.
-   * Selects a random spell from a predefined list.
-   */
-  const handleGenerateSpell = () => {
-    // Simulate AI-generated spells
+  const handleGenerateSpell = useCallback(() => {
     const spells = [
       'May your dreams shine like stars',
       'May courage always be with you',
@@ -37,26 +28,30 @@ const SpellPage = () => {
     ];
     const randomSpell = spells[Math.floor(Math.random() * spells.length)];
     setSelectedSpell(randomSpell);
-  };
+  }, []);
 
-  /**
-   * AI Mode tab content component.
-   * Allows users to input a wish and generate a spell using AI.
-   */
-  const AIRoute = () => (
-    <View
-      style={[
-        styles.tabContainer,
-        { backgroundColor: theme.colors.background },
-      ]}
-    >
+  // 处理发送咒语
+  const handleSendSpell = useCallback(() => {
+    if (goal && selectedSpell) {
+      // 导航到 SendSpell 页面并传递参数
+      navigation.navigate('Spell', { screen: 'RecordPage', 
+          params: {
+            title:goal,
+            content:selectedSpell
+        }
+      });
+    }
+  }, [goal, selectedSpell, navigation]);
+
+  return (
+    <View style={[styles.tabContainer, { backgroundColor: theme.colors.background }]}>
       <Card mode='contained' style={styles.card}>
         <Card.Content>
           <Text variant='titleMedium' style={styles.cardTitle}>
             Enter Your Wish
           </Text>
           <TextInput
-            label='Wish Description'
+            label='Title'
             value={goal}
             onChangeText={setGoal}
             mode='outlined'
@@ -74,12 +69,12 @@ const SpellPage = () => {
             labelStyle={styles.buttonLabel}
             contentStyle={styles.buttonContent}
             icon='auto-fix'
-            disabled={!goal.trim()} // Disable button if goal is empty
+            disabled={!goal.trim()}
           >
             Generate Spell
           </Button>
 
-          {selectedSpell ? ( // Show generated spell if available
+          {selectedSpell ? (
             <View style={styles.resultContainer}>
               <Text variant='titleSmall' style={styles.resultLabel}>
                 Generated Spell:
@@ -97,16 +92,15 @@ const SpellPage = () => {
                 icon='send'
                 style={styles.sendButton}
                 labelStyle={styles.sendButtonLabel}
+                onPress={handleSendSpell} // 添加点击事件
               >
                 Send Spell
               </Button>
             </View>
           ) : (
-            // Show placeholder text if no spell is generated
             <View style={styles.placeholderContainer}>
               <Text variant='bodyMedium' style={styles.placeholderText}>
-                Enter your wish, and AI will generate a personalized spell for
-                you
+                Enter your wish, and AI will generate a personalized spell for you
               </Text>
             </View>
           )}
@@ -114,22 +108,31 @@ const SpellPage = () => {
       </Card>
     </View>
   );
+});
 
-  /**
-   * Manual Mode tab content component.
-   * Allows users to manually create and save/send spells.
-   */
-  /**
-   * Manual Mode tab content component.
-   * Allows users to manually create and save/send spells.
-   */
-  const ManualRoute = () => (
-    <View
-      style={[
-        styles.tabContainer,
-        { backgroundColor: theme.colors.background },
-      ]}
-    >
+// 独立 Manual 标签页组件
+const ManualRoute = memo(function ManualRoute() {
+  const theme = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<StackParamList>>();
+  const [goal, setGoal] = useState('');
+  const [manualSpells, setManualSpells] = useState('');
+
+  // 处理发送咒语
+  // 处理发送咒语
+  const handleSendSpell = useCallback(() => {
+    if (goal && manualSpells) {
+      // 导航到 SendSpell 页面并传递参数
+      navigation.navigate('Spell', { screen: 'RecordPage', 
+          params: {
+            title:goal,
+            content:manualSpells
+        }
+      });
+    }
+  }, [goal, manualSpells, navigation]);
+
+  return (
+    <View style={[styles.tabContainer, { backgroundColor: theme.colors.background }]}>
       <Card mode='contained' style={styles.card}>
         <Card.Content>
           <Text variant='titleMedium' style={styles.cardTitle}>
@@ -137,7 +140,7 @@ const SpellPage = () => {
           </Text>
 
           <TextInput
-            label='Wish Description'
+            label='Title'
             value={goal}
             onChangeText={setGoal}
             mode='outlined'
@@ -160,21 +163,7 @@ const SpellPage = () => {
             placeholderTextColor={theme.colors.onSurfaceDisabled}
           />
 
-          {/* 修改后的按钮组 - 确保水平对齐 */}
           <View style={styles.buttonGroup}>
-            <View style={styles.buttonWrapper}>
-              <Button
-                mode='outlined'
-                style={styles.outlineButton}
-                icon='content-save'
-                onPress={() => console.log('Save draft')}
-              >
-                Save Draft
-              </Button>
-            </View>
-
-            <View style={styles.buttonSpacer} />
-
             <View style={styles.buttonWrapper}>
               <Button
                 mode='contained'
@@ -183,6 +172,7 @@ const SpellPage = () => {
                 disabled={!goal.trim() || !manualSpells.trim()}
                 contentStyle={styles.buttonContent}
                 labelStyle={styles.buttonLabel}
+                onPress={handleSendSpell} // 添加点击事件
               >
                 Send Spell
               </Button>
@@ -192,121 +182,30 @@ const SpellPage = () => {
       </Card>
     </View>
   );
+});
 
-  /**
-   * Drafts tab content component.
-   * Shows recording functionality and a sample draft.
-   */
-  const DraftRoute = () => (
-    <View
-      style={[
-        styles.tabContainer,
-        { backgroundColor: theme.colors.background },
-      ]}
-    >
-      <Card mode='contained' style={styles.draftCard}>
-        <Card.Title
-          title='Draft Example'
-          titleVariant='titleSmall'
-          left={(props) => (
-            <Text {...props} style={styles.draftIcon}>
-              📝
-            </Text>
-          )}
-        />
-        <Card.Content>
-          <Text variant='bodyMedium' style={styles.draftText}>
-            &quot;May this interview go smoothly, allowing me to show my best
-            self.&rdquo;
-          </Text>
-          <Text variant='bodySmall' style={styles.draftDate}>
-            October 15, 2023
-          </Text>
-        </Card.Content>
-        <Card.Actions>
-          <Button mode='text' icon='play-circle-outline'>
-            Play
-          </Button>
-          <Button mode='text' icon='delete' textColor={theme.colors.error}>
-            Delete
-          </Button>
-        </Card.Actions>
-      </Card>
-      <Card mode='contained' style={styles.draftCard}>
-        <Card.Title
-          title='Draft Example'
-          titleVariant='titleSmall'
-          left={(props) => (
-            <Text {...props} style={styles.draftIcon}>
-              📝
-            </Text>
-          )}
-        />
-        <Card.Content>
-          <Text variant='bodyMedium' style={styles.draftText}>
-            &quot;May this interview go smoothly, allowing me to show my best
-            self.&rdquo;
-          </Text>
-          <Text variant='bodySmall' style={styles.draftDate}>
-            October 15, 2023
-          </Text>
-        </Card.Content>
-        <Card.Actions>
-          <Button mode='text' icon='play-circle-outline'>
-            Play
-          </Button>
-          <Button mode='text' icon='delete' textColor={theme.colors.error}>
-            Delete
-          </Button>
-        </Card.Actions>
-      </Card>
-      <Card mode='contained' style={styles.draftCard}>
-        <Card.Title
-          title='Draft Example'
-          titleVariant='titleSmall'
-          left={(props) => (
-            <Text {...props} style={styles.draftIcon}>
-              📝
-            </Text>
-          )}
-        />
-        <Card.Content>
-          <Text variant='bodyMedium' style={styles.draftText}>
-            &quot;May this interview go smoothly, allowing me to show my best
-            self.&rdquo;
-          </Text>
-          <Text variant='bodySmall' style={styles.draftDate}>
-            October 15, 2023
-          </Text>
-        </Card.Content>
-        <Card.Actions>
-          <Button mode='text' icon='play-circle-outline'>
-            Play
-          </Button>
-          <Button mode='text' icon='delete' textColor={theme.colors.error}>
-            Delete
-          </Button>
-        </Card.Actions>
-      </Card>
-    </View>
+const SpellPage = () => {
+  const theme = useTheme();
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    { key: 'ai', title: AI_MODE },
+    { key: 'manual', title: MANUAL_MODE },
+  ]);
+
+  // 使用 useMemo 缓存场景映射
+  const renderScene = React.useMemo(
+    () =>
+      SceneMap({
+        ai: AIRoute,
+        manual: ManualRoute,
+      }),
+    []
   );
-
-  // SceneMap for TabView to render different components for each tab
-  const renderScene = SceneMap({
-    ai: AIRoute,
-    manual: ManualRoute,
-    draft: DraftRoute,
-  });
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      {/* <View style={styles.header}>
-        <Text variant="titleLarge" style={styles.title}>Magic Spell Generator</Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>Manifest Your Wishes with Spells</Text>
-      </View> */}
-
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -333,10 +232,6 @@ const SpellPage = () => {
               paddingVertical: 8,
               height: 48,
             }}
-            // labelStyle={{ // Keeping this commented as it was in original code
-            //   fontWeight: 'bold',
-            //   textTransform: 'none',
-            // }}
             pressColor={theme.colors.primaryContainer}
             contentContainerStyle={{
               justifyContent: 'center',
@@ -387,30 +282,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
     textAlignVertical: 'top',
   },
-  // button: {
-  //   borderRadius: 12,
-  //   marginTop: 8,
-  // },
-  // buttonContent: {
-  //   height: 48,
-  // },
-  // buttonLabel: {
-  //   fontSize: 16,
-  // },
-  // outlineButton: {
-  //   borderRadius: 12,
-  //   borderWidth: 1.5,
-  // },
-  // buttonGroup: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   marginTop: 8,
-  //   gap: 12,
-  // },
-  
-
-  //..
-    buttonGroup: {
+  buttonGroup: {
     flexDirection: 'row',
     marginTop: 8,
   },
@@ -471,59 +343,6 @@ const styles = StyleSheet.create({
   sendButtonLabel: {
     color: '#6200ee',
     fontWeight: 'bold',
-  },
-  recordingContainer: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  recordingIndicator: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 16,
-  },
-  recordingText: {
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  recordingTime: {
-    marginBottom: 24,
-    opacity: 0.7,
-  },
-  recordingButton: {
-    borderRadius: 12,
-  },
-  recordingButtonContent: {
-    height: 48,
-  },
-  draftContent: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  draftPlaceholder: {
-    marginBottom: 24,
-    opacity: 0.6,
-  },
-  recordButton: {
-    borderRadius: 12,
-    width: '100%',
-  },
-  recordButtonContent: {
-    height: 48,
-  },
-  draftCard: {
-    borderRadius: 16,
-    marginTop: 8,
-  },
-  draftIcon: {
-    fontSize: 24,
-    marginRight: 8,
-  },
-  draftText: {
-    marginBottom: 4,
-  },
-  draftDate: {
-    opacity: 0.6,
   },
 });
 

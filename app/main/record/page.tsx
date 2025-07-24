@@ -1,12 +1,15 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { AppDispatch, RootState } from '@/store';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useRoute } from '@react-navigation/native';
+// ... 其他导入
 import {
   AudioModule,
   RecordingPresets,
-  setAudioModeAsync,
   useAudioPlayer,
-  useAudioRecorder,
+  useAudioPlayerStatus,
+  useAudioRecorder
 } from 'expo-audio';
 import { useEffect, useState } from 'react';
 import {
@@ -19,74 +22,162 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+
+import { addSpell, deleteSpell } from '@/store/spellSlice';
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+export const useAppDispatch: () => AppDispatch = useDispatch;
 
 export default function RecordPage() {
+  // 使用 useRoute Hook 来获取路由信息
+  let { params } = useRoute<any>(); // 👈 获取 params
+  if (!params) {
+    params = {};
+  }
+    // 定义参数类型
+  type RecordPageParams = {
+    spellId?: string;
+    content?: string;
+    title?: string;
+  };
+  const { spellId, content, title } = params as RecordPageParams;
+
+  const [description, setDescription] = useState(content || '');
+  // const [goal, setGoal] = useState(title || '');
+  // 从 params 中解构出你需要的数据
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingURI, setRecordingURI] = useState<string | undefined>(
     undefined
   );
   const [expandedMode, setExpandedMode] = useState<
-    'none' | 'recording' | 'playing' | 'saving'
+    'none' | 'recording' | 'playing' | 'saving' | 'deleting' // 添加删除模式
   >('none');
   const theme = useTheme();
+  const dispatch = useAppDispatch();
 
   // 动画值
   const scaleAnimation = useState(new Animated.Value(1))[0];
   const opacityAnimation = useState(new Animated.Value(1))[0];
+
+  const audioPlayer = useAudioPlayer({
+    uri: recordingURI,
+  });
+
+
+  const targetSpell = useSelector((state: RootState) =>
+    state.spellsReducer.spells.find((spell) => spell.id === spellId)
+  );
+
+  const audioPlayerState = useAudioPlayerStatus(audioPlayer);
+
+  useEffect(() => {
+    if (targetSpell?.uri) {
+      console.log('路由进来的，加载录音资源');
+      audioPlayer.replace({uri: targetSpell?.uri});
+      setRecordingURI(targetSpell.uri); // 设置录音URI
+    }
+  }, [audioPlayer, targetSpell?.uri]);
+
+  useEffect(() => {
+    if (recordingURI) {
+      console.log('录音资源更改了，加载资源：', recordingURI);
+      audioPlayer.replace({ uri: recordingURI });
+    }
+  }, [audioPlayer, recordingURI]);
 
   const audioRecorder = useAudioRecorder({
     ...RecordingPresets.HIGH_QUALITY,
     extension: '.m4a',
   });
 
-  const audioPlayer = useAudioPlayer({
-    uri: recordingURI,
-  });
-
-  useEffect(() => {
-    if (audioPlayer.isLoaded) {
-      console.log('音频已加载');
-    } else {
-      console.log('音频未加载');
-    }
-  }, [audioPlayer]);
-
   const record = async () => {
     if (isRecording) return;
     console.log('录音开始');
     setIsRecording(true);
-    await audioRecorder.prepareToRecordAsync();
+    await audioRecorder.prepareToRecordAsync({
+      ...RecordingPresets.HIGH_QUALITY,
+      extension: '.m4a',
+    });
     audioRecorder.record();
   };
 
-const stopRecording = async () => {
-  console.log('录音结束')
-  try {
-    await audioRecorder.stop();
-    setIsRecording(false);
-    if (audioRecorder.uri) setRecordingURI(audioRecorder.uri);
-    collapseActionArea();
-  } catch (error) {
-    Alert.alert('录音错误', '录音停止失败，请重试');
-    console.error('录音停止失败:', error);
-  }
-};
+  useEffect(() => {
+    if (audioPlayerState.didJustFinish && recordingURI) {
+      console.log('播放完成, 重置', recordingURI);
+      audioPlayer.replace({uri: recordingURI})
+      setIsPlaying(false);
+      setExpandedMode('none');
+    }
+  }, [audioPlayerState, audioPlayer, recordingURI]);
+
+  const stopRecording = async () => {
+    console.log('录音结束', audioRecorder.uri);
+    try {
+      await audioRecorder.stop();
+      setIsRecording(false);
+
+      if (audioRecorder.uri) {
+        setRecordingURI(audioRecorder.uri);
+      }
+
+      collapseActionArea();
+    } catch (error) {
+      Alert.alert('录音错误', '录音停止失败，请重试');
+      console.error('录音停止失败:', error);
+    }
+  };
 
   const handleSave = () => {
-    // 实际保存逻辑需要根据您的存储方案实现
+    if (!recordingURI) return;
+    
     Alert.alert('保存成功', '录音已保存到本地');
     console.log('保存录音:', recordingURI);
-
+    dispatch(
+      addSpell({
+        id: 'r' + Date.now(),
+        name: '标题',
+        description: '录音',
+        uri: recordingURI,
+        createdAt: new Date().toISOString(),
+      })
+    );
+    
+    // 清空当前录音
+    setRecordingURI(undefined);
+    
     // 恢复底部操作区
     collapseActionArea();
   };
 
+  // 处理删除操作
+  const handleDelete = () => {
+    if (!recordingURI) return;
+    
+    // 停止播放（如果正在播放）
+    if (isPlaying) {
+      audioPlayer.pause();
+      setIsPlaying(false);
+    }
+    
+    // 清空录音
+    setRecordingURI(undefined);
+    if (targetSpell) {
+      console.log('删除', targetSpell.id);
+      dispatch(deleteSpell(targetSpell.id));
+    }
+    
+    // 恢复底部操作区
+    collapseActionArea();
+    
+    Alert.alert('删除成功', '当前录音已删除');
+  };
+
   // 展开底部操作区为指定模式
-  const expandActionArea = (mode: 'recording' | 'playing' | 'saving') => {
+  const expandActionArea = (mode: 'recording' | 'playing' | 'saving' | 'deleting') => {
     setExpandedMode(mode);
 
-    // 展开动画 - 只改变缩放和透明度，不改变高度
+    // 展开动画
     Animated.parallel([
       Animated.timing(scaleAnimation, {
         toValue: 1.05,
@@ -132,6 +223,15 @@ const stopRecording = async () => {
     }
   };
 
+  // 处理删除确认
+  const handleDeleteConfirm = (confirm: boolean) => {
+    if (confirm) {
+      handleDelete();
+    } else {
+      collapseActionArea();
+    }
+  };
+
   useEffect(() => {
     (async () => {
       const status = await AudioModule.requestRecordingPermissionsAsync();
@@ -149,27 +249,27 @@ const stopRecording = async () => {
           },
         ]);
       }
-
-      setAudioModeAsync({
-        playsInSilentMode: true,
-        allowsRecording: true,
-      });
     })();
   }, []);
 
   const togglePlayPause = () => {
     const newIsPlay = !isPlaying;
-    console.log('togglePlayPause');
-    setIsPlaying(newIsPlay);
+    console.log('togglePlayPause', newIsPlay);
 
-    if (newIsPlay) {
+    if (newIsPlay && recordingURI) {
       // 展开播放视图
       console.log('播放');
+      setIsPlaying(newIsPlay);
       expandActionArea('playing');
       audioPlayer.play();
-    } else {  
+    } else if (newIsPlay && !recordingURI) {
+      console.log('请先录制');
+      Alert.alert('请先录制');
+      collapseActionArea()
+    } else if (!newIsPlay) {
       console.log('暂停播放');
       // 恢复视图
+      setIsPlaying(newIsPlay);
       collapseActionArea();
       audioPlayer.pause();
     }
@@ -180,16 +280,22 @@ const stopRecording = async () => {
     expandActionArea('recording');
     record();
   };
-  useEffect(() => {
-  console.log('isRecording:', isRecording);
-  console.log('isPlaying:', isPlaying);
-  console.log('expandedMode:', expandedMode);
-}, [isRecording, isPlaying, expandedMode]);
 
   // 处理保存点击
   const handleSavePress = () => {
     if (!recordingURI) return;
+    if (targetSpell?.uri === recordingURI) {
+      console.log('音源一样不需要保存');
+      Alert.alert('提示', '已保存');
+      return;
+    }
     expandActionArea('saving');
+  };
+  
+  // 处理删除点击
+  const handleDeletePress = () => {
+    if (!recordingURI) return;
+    expandActionArea('deleting');
   };
 
   return (
@@ -197,51 +303,9 @@ const stopRecording = async () => {
       {/* 文本容器 */}
       <ThemedView style={styles.spellContainer}>
         <ThemedText style={styles.spellText}>
-          My body is strong, and my will is unwavering. Every day, I become
-          healthier, lighter, and more energized. I love the way movement fuels
-          me, and I honor every healthy choice I make. Losing weight isn’t a
-          battle — it’s a journey of self-care and growth. I believe in myself.
-          I am on my way to success — and I will get there.
+           {description}
         </ThemedText>
       </ThemedView>
-      {/* <LyricsDisplay 
-        styles={{
-          container: {
-            backgroundColor: 'transparent',
-          },
-          line: {
-            color: 'red',
-          },
-          highlighted: {
-            color: 'white',
-          }
-        }}
-      lyrics={[
-        {time:0, text:'My body is strong'},
-        {time:2, text:' my will is unwavering'},
-        {time:4, text:'My body is strong, and'},
-        {time:6, text:'My body is strong, and'},
-        {time:8, text:'My body is strong, and'}, 
-        {time:10, text:'My body is strong, and'},
-        {time:14, text:'My body is strong, and'},
-        {time:19, text:'My body is strong, and'},
-        {time:21, text:'My body is strong, and'},
-        {time:24, text:'My body is strong, and'},
-        {time:26, text:'My body is strong, and'},
-        {time:28, text:'My body is strong, and'},
-        {time:30, text:'My body is strong, and'},
-        {time:32, text:'My body is strong, and'},
-        {time:34, text:'My body is strong, and'},
-        {time:36, text:'My body is strong, and'},
-        {time:40, text:'My body is strong, and'},
-        {time:42, text:'My body is strong, and'},
-        {time:44, text:'My body is strong, and'},
-        {time:47, text:'My body is strong, and'},
-        {time:50, text:'My body is strong, and'},
-        
-        ] } currentTime={32}>
-
-        </LyricsDisplay> */}
 
       {/* 底部操作区 - 统一高度 */}
       <Animated.View
@@ -279,7 +343,6 @@ const stopRecording = async () => {
 
                 <TouchableOpacity
                   onPress={handleRecordPressIn}
-                  // onPressOut={stopRecording} // 直接绑定 onPressOut
                   activeOpacity={0.7}
                   style={styles.iconButton}
                 >
@@ -298,6 +361,20 @@ const stopRecording = async () => {
                 >
                   <MaterialCommunityIcons
                     name='content-save'
+                    size={36}
+                    color={recordingURI ? theme.colors.primary : '#9E9E9E'}
+                  />
+                </TouchableOpacity>
+                
+                {/* 新增删除按钮 */}
+                <TouchableOpacity
+                  onPress={handleDeletePress}
+                  activeOpacity={0.7}
+                  style={styles.iconButton}
+                  disabled={!recordingURI}
+                >
+                  <MaterialCommunityIcons
+                    name='delete'
                     size={36}
                     color={recordingURI ? theme.colors.primary : '#9E9E9E'}
                   />
@@ -358,6 +435,31 @@ const stopRecording = async () => {
               </View>
             </View>
           )}
+          
+          {/* 删除模式下的确认对话框 */}
+          {expandedMode === 'deleting' && (
+            <View style={styles.expandedContent}>
+              <View style={styles.confirmContainer}>
+                <ThemedText style={styles.confirmText}>
+                  是否确定删除？
+                </ThemedText>
+                <View style={styles.confirmButtons}>
+                  <TouchableOpacity
+                    style={[styles.confirmButton, styles.confirmButtonNo]}
+                    onPress={() => handleDeleteConfirm(true)}
+                  >
+                    <ThemedText style={styles.confirmButtonText}>是</ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.confirmButton, styles.confirmButtonYes]}
+                    onPress={() => handleDeleteConfirm(false)}
+                  >
+                    <ThemedText style={styles.confirmButtonText}>否</ThemedText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       </Animated.View>
     </ThemedView>
@@ -370,8 +472,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 40,
-    // paddingBottom: 20,
-    backgroundColor: 'transparent'
   },
   spellContainer: {
     flex: 1,
@@ -379,7 +479,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     elevation: 3,
     marginVertical: 16,
@@ -393,62 +492,29 @@ const styles = StyleSheet.create({
   },
   actionArea: {
     width: '90%',
-    height: ACTION_AREA_HEIGHT, // 固定高度
+    height: ACTION_AREA_HEIGHT,
     alignSelf: 'center',
-    backgroundColor: 'transparent',
-    // borderBlockColor: '#FFFFFF',
-    // borderWidth: 1,
-    // borderRadius: 16,
     elevation: 2,
   },
   expandedIconContainer: {
-    flex: 1, // 填充父容器
-    justifyContent: 'center', // 垂直居中
-    alignItems: 'center', // 水平居中
-    paddingHorizontal: 24, // 内边距防止内容贴边
-    backgroundColor: 'transparent',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
   },
   contentContainer: {
     flex: 1,
-      backgroundColor: 'transparent',
     justifyContent: 'center',
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  currentTimeText: {
-    position: 'absolute',
-    top: -15,
-    right: 16,
-    fontSize: 12,
-    color: '#6750A4',
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 16, // 底部内边距，确保垂直居中
+    paddingBottom: 16,
   },
   iconButton: {
     padding: 8,
-  },
-  recordingLabel: {
-    position: 'absolute',
-    bottom: ACTION_AREA_HEIGHT + 20, // 固定在操作区上方
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  recordingLabelText: {
-    color: '#FFFFFF',
-    marginLeft: 8,
-    fontSize: 14,
   },
   expandedContent: {
     flex: 1,
@@ -457,11 +523,6 @@ const styles = StyleSheet.create({
   },
   expandedIcon: {
     marginBottom: 20,
-  },
-  expandedText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
   },
   confirmContainer: {
     width: '80%',
@@ -488,10 +549,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   confirmButtonYes: {
-    backgroundColor: '#6750A4',
+    backgroundColor: '#11f054ff',
   },
   confirmButtonNo: {
-    backgroundColor: '#E5E5E5',
+    backgroundColor: '#f1b00cff',
   },
   confirmButtonText: {
     fontSize: 16,

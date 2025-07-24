@@ -4,7 +4,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-
 // 页面导入
 
 import MD3TabBar from '@/components/MD3TarBar';
@@ -23,8 +22,11 @@ const Tab = createBottomTabNavigator();
 // Home导航栈
 function HomeStack() {
   return (
-    <Stack.Navigator initialRouteName='HomePage' screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="HomePage" component={HomePage} />
+    <Stack.Navigator
+      initialRouteName='HomePage'
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name='HomePage' component={HomePage} />
     </Stack.Navigator>
   );
 }
@@ -32,10 +34,13 @@ function HomeStack() {
 // Spell导航栈
 function SpellStack() {
   return (
-    <Stack.Navigator initialRouteName='SpellPage' screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="SpellPage" component={SpellPage} />
-      <Stack.Screen name="RecordPage" component={RecordPage} />
-      <Stack.Screen name="PosterPage" component={PosterPage} />
+    <Stack.Navigator
+      initialRouteName='SpellPage'
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name='SpellPage' component={SpellPage} />
+      <Stack.Screen name='RecordPage' component={RecordPage} />
+      <Stack.Screen name='PosterPage' component={PosterPage} />
     </Stack.Navigator>
   );
 }
@@ -43,9 +48,16 @@ function SpellStack() {
 // Profile中心导航栈
 function ProfileStack() {
   return (
-    <Stack.Navigator initialRouteName='ProfilePage' screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ProfilePage" component={ProfilePage} options={{title: 'Profile'}} />
-      <Stack.Screen name="CalendarPage" component={CalendarPage} />
+    <Stack.Navigator
+      initialRouteName='ProfilePage'
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen
+        name='ProfilePage'
+        component={ProfilePage}
+        options={{ title: 'Profile' }}
+      />
+      <Stack.Screen name='CalendarPage' component={CalendarPage} />
     </Stack.Navigator>
   );
 }
@@ -57,36 +69,57 @@ function MainTabs() {
     <Tab.Navigator
       tabBar={(props) => <MD3TabBar {...props} />} // 使用自定义 TabBar
     >
-      <Tab.Screen 
-        name="Home"
+      <Tab.Screen
+        name='Home'
         component={HomeStack}
         options={{
           headerShown: false,
           tabBarLabel: 'Home',
           tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
       <Tab.Screen
-        name="Spell"
+        name='Spell'
         component={SpellStack}
         options={{
           headerShown: false,
           tabBarLabel: 'Spell',
           tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'sparkles' : 'sparkles-outline'} size={size} color={color} />
+            <Ionicons
+              name={focused ? 'sparkles' : 'sparkles-outline'}
+              size={size}
+              color={color}
+            />
           ),
         }}
+        // listeners={({ navigation, route }) => ({
+        //   tabPress: (e) => {
+        //     e.preventDefault();
+        //     navigation.navigate('Spell', {
+        //       screen: 'SpellPage', // 明确指定回到根页面
+        //       params: {}, // 清空参数
+        //     });
+        //   },
+        // })}
       />
       <Tab.Screen
-        name="Profile"
+        name='Profile'
         component={ProfileStack}
         options={{
           headerShown: false,
           tabBarLabel: 'My',
           tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -97,9 +130,12 @@ function MainTabs() {
 // 根导航器
 export default function AppNavigator() {
   return (
-      <Stack.Navigator initialRouteName="MainTabs" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Welcome" component={WelcomePage} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-      </Stack.Navigator>
+    <Stack.Navigator
+      initialRouteName='MainTabs'
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name='Welcome' component={WelcomePage} />
+      <Stack.Screen name='MainTabs' component={MainTabs} />
+    </Stack.Navigator>
   );
 }
