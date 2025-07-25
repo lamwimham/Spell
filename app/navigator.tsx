@@ -98,15 +98,15 @@ function MainTabs() {
             />
           ),
         }}
-        // listeners={({ navigation, route }) => ({
-        //   tabPress: (e) => {
-        //     e.preventDefault();
-        //     navigation.navigate('Spell', {
-        //       screen: 'SpellPage', // 明确指定回到根页面
-        //       params: {}, // 清空参数
-        //     });
-        //   },
-        // })}
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Spell', {
+              screen: 'SpellPage', // 明确指定回到根页面
+              params: {}, // 清空参数
+            });
+          },
+        })}
       />
       <Tab.Screen
         name='Profile'
@@ -130,9 +130,9 @@ function MainTabs() {
 // 根导航器
 export default function AppNavigator() {
   return (
-    <Stack.Navigator
+    <Stack.Navigator 
       initialRouteName='MainTabs'
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
     >
       <Stack.Screen name='Welcome' component={WelcomePage} />
       <Stack.Screen name='MainTabs' component={MainTabs} />
