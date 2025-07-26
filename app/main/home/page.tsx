@@ -44,7 +44,7 @@ const SpellCard = ({ duration, location, title, onPlayPress }: SpellCardProps) =
           { color: theme.colors.onSurfaceDisabled },
         ]}
         subtitleStyle={[theme.fonts.labelLarge]}
-        subtitle={location}
+        subtitle={title}
         right={(props) => (
           <TouchableOpacity
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -70,7 +70,7 @@ const SpellCard = ({ duration, location, title, onPlayPress }: SpellCardProps) =
             { color: theme.colors.onSurface },
           ]}
         >
-          {title}
+          {location}
         </Text>
       </Card.Content>
     </Card>
