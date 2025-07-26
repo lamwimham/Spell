@@ -43,7 +43,7 @@ export default function RecordPage() {
   const { spellId, content, title } = params as RecordPageParams;
 
   const [description, setDescription] = useState(content || '');
-  // const [goal, setGoal] = useState(title || '');
+  const [goal, setGoal] = useState(title || '');
   // 从 params 中解构出你需要的数据
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -60,23 +60,27 @@ export default function RecordPage() {
   const scaleAnimation = useState(new Animated.Value(1))[0];
   const opacityAnimation = useState(new Animated.Value(1))[0];
 
-  const audioPlayer = useAudioPlayer({
-    uri: recordingURI,
-  });
-
-
   const targetSpell = useSelector((state: RootState) =>
     state.spellsReducer.spells.find((spell) => spell.id === spellId)
   );
 
+  let existedSpellUri = targetSpell?.uri;
+  const audioPlayer = useAudioPlayer({
+    uri: recordingURI,
+  });
   const audioPlayerState = useAudioPlayerStatus(audioPlayer);
+
+  const audioRecorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    extension: '.m4a',
+  });
 
   useEffect(() => {
     if (targetSpell?.uri) {
-      console.log('路由进来的，加载录音资源');
-      audioPlayer.replace({uri: targetSpell?.uri});
-      setRecordingURI(targetSpell.uri); // 设置录音URI
-    }
+      // console.log('路由进来的，加载录音资源', targetSpell?.uri);
+      // audioPlayer.replace({uri: targetSpell?.uri});
+      setRecordingURI(targetSpell?.uri); // 设置录音URI
+    } 
   }, [audioPlayer, targetSpell?.uri]);
 
   useEffect(() => {
@@ -86,10 +90,7 @@ export default function RecordPage() {
     }
   }, [audioPlayer, recordingURI]);
 
-  const audioRecorder = useAudioRecorder({
-    ...RecordingPresets.HIGH_QUALITY,
-    extension: '.m4a',
-  });
+
 
   const record = async () => {
     if (isRecording) return;
@@ -136,15 +137,15 @@ export default function RecordPage() {
     dispatch(
       addSpell({
         id: 'r' + Date.now(),
-        name: '标题',
-        description: '录音',
+        name: goal,
+        description: description,
         uri: recordingURI,
         createdAt: new Date().toISOString(),
       })
     );
     
     // 清空当前录音
-    setRecordingURI(undefined);
+    // setRecordingURI(undefined);
     
     // 恢复底部操作区
     collapseActionArea();
@@ -284,7 +285,7 @@ export default function RecordPage() {
   // 处理保存点击
   const handleSavePress = () => {
     if (!recordingURI) return;
-    if (targetSpell?.uri === recordingURI) {
+    if (existedSpellUri === recordingURI) {
       console.log('音源一样不需要保存');
       Alert.alert('提示', '已保存');
       return;
