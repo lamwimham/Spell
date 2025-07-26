@@ -8,6 +8,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 // 为了类型安全，推荐使用 typed hooks
+import AudioPlayerDrawer from '@/components/AudioPlayerDrawer';
 import { AppDispatch, RootState } from '@/store';
 
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
@@ -79,6 +80,8 @@ const SpellCard = ({ duration, location, title, onPlayPress }: SpellCardProps) =
 export default function HomePage() {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPlayerVisible, setIsPlayerVisible] = useState(false);
+  const [selectedSpellId, setSelectedSpellId] = useState('');
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
   const spells = useAppSelector((state) => state.spellsReducer.spells); // 从 store 中读取 spells 列表
@@ -102,13 +105,19 @@ export default function HomePage() {
     });
   };
 
+  const closePlayer = () => {
+    setIsPlayerVisible(false);
+  };
+
   const handlePlayPress = (cardId: string) => {
-    navigation.navigate('MainTabs', {
-      screen: 'Spell',
-      params: { screen: 'RecordPage', params: {
-        spellId: cardId,
-      }},
-    });
+    setSelectedSpellId(cardId);
+    setIsPlayerVisible(true);
+    // navigation.navigate('MainTabs', {
+    //   screen: 'Spell',
+    //   params: { screen: 'RecordPage', params: {
+    //     spellId: cardId,
+    //   }},
+    // });
   };
 
   return (
@@ -135,7 +144,12 @@ export default function HomePage() {
           />
         ))}
       </ScrollView>
-      
+      <AudioPlayerDrawer 
+        spellId={selectedSpellId}
+        visible={isPlayerVisible}
+        onClose={closePlayer}
+      />
+
       <FAB
         style={styles.fab}
         icon={() => (
