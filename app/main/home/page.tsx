@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, FAB, Searchbar, Text, useTheme } from 'react-native-paper';
+import { Card, Searchbar, Text, useTheme } from 'react-native-paper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
@@ -10,6 +10,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 // 为了类型安全，推荐使用 typed hooks
 import AudioPlayerDrawer from '@/components/AudioPlayerDrawer';
 import { AppDispatch, RootState } from '@/store';
+import { deleteSpell } from '@/store/spellSlice';
 
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 export const useAppDispatch: () => AppDispatch = useDispatch;
@@ -29,7 +30,6 @@ interface SpellCardProps {
 // 可复用的卡片组件
 const SpellCard = ({ duration, location, title, onPlayPress }: SpellCardProps) => {
   const theme = useTheme();
-
   return (
     <Card
       style={[
@@ -79,6 +79,7 @@ const SpellCard = ({ duration, location, title, onPlayPress }: SpellCardProps) =
 
 export default function HomePage() {
   const theme = useTheme();
+  const dispatch = useAppDispatch();
   const [searchQuery, setSearchQuery] = useState('');
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [selectedSpellId, setSelectedSpellId] = useState('');
@@ -107,6 +108,10 @@ export default function HomePage() {
 
   const closePlayer = () => {
     setIsPlayerVisible(false);
+  };
+
+  const handleDelete = (cardId: string) => {
+    dispatch(deleteSpell(cardId));
   };
 
   const handlePlayPress = (cardId: string) => {
@@ -148,15 +153,16 @@ export default function HomePage() {
         spellId={selectedSpellId}
         visible={isPlayerVisible}
         onClose={closePlayer}
+        onDelete={handleDelete}
       />
 
-      <FAB
+      {/* <FAB
         style={styles.fab}
         icon={() => (
           <Ionicons name="sparkles" size={24} color={theme.colors.onSurface} />
         )}
         onPress={handleCreateNewSpell}
-      />
+      /> */}
     </SafeAreaView>
   );
 }
