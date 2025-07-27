@@ -30,6 +30,7 @@ const TabBarItem = ({ label, icon, focused, onPress }: TabBarItemProps) => {
 
 export default function MD3TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   return (
     <View style={[styles.container, {paddingBottom: insets.bottom}]}>
       {state.routes.map((route, index) => {
@@ -54,10 +55,12 @@ export default function MD3TabBar({ state, descriptors, navigation }: BottomTabB
           label = options.title ?? route.name;
         }
 
+        const color = isFocused ? theme.colors.primary : theme.colors.onSurfaceVariant;
         // 安全地处理图标
+        console.log(color);
         const tabBarIconResult = options.tabBarIcon?.({ 
           focused: isFocused, 
-          color: '', 
+          color: color, 
           size: 24 
         });
         

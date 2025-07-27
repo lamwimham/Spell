@@ -25,6 +25,7 @@ import { useTheme } from 'react-native-paper';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 import { addSpell, deleteSpell } from '@/store/spellSlice';
+import moment from 'moment';
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 export const useAppDispatch: () => AppDispatch = useDispatch;
 
@@ -140,7 +141,10 @@ export default function RecordPage() {
         name: goal,
         description: description,
         uri: recordingURI,
-        createdAt: new Date().toISOString(),
+        createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+        shareCount: undefined,
+        playCount: undefined,
+        image: 'https://images.pexels.com/photos/32026822/pexels-photo-32026822.jpeg'
       })
     );
     

@@ -1,111 +1,40 @@
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Searchbar, Text, useTheme } from 'react-native-paper';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-paper';
 
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 // 为了类型安全，推荐使用 typed hooks
-import AudioPlayerDrawer from '@/components/AudioPlayerDrawer';
+import AudioPlayerDrawer from '@/components/custom/AudioPlayer';
+import Card from '@/components/custom/Card';
+import { ThemedText } from '@/components/ThemedText';
 import { AppDispatch, RootState } from '@/store';
 import { deleteSpell } from '@/store/spellSlice';
 
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 export const useAppDispatch: () => AppDispatch = useDispatch;
 
-type RootStackParamList = {
-  MainTabs: { screen: string; params: { screen: string; params?: any } };
-};
-
-// 定义卡片数据类型
-interface SpellCardProps {
-  duration: string;
-  location: string;
-  title: string;
-  onPlayPress?: () => void;
-}
-
-// 可复用的卡片组件
-const SpellCard = ({ duration, location, title, onPlayPress }: SpellCardProps) => {
-  const theme = useTheme();
-  return (
-    <Card
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.elevation.level1 },
-      ]}
-    >
-      <Card.Title
-        title={duration}
-        titleStyle={[
-          theme.fonts.labelSmall,
-          { color: theme.colors.onSurfaceDisabled },
-        ]}
-        subtitleStyle={[theme.fonts.labelLarge]}
-        subtitle={title}
-        right={(props) => (
-          <TouchableOpacity
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            activeOpacity={0.7}
-            onPress={onPlayPress}
-          >
-            <Ionicons
-              {...props}
-              name="play-circle-outline"
-              size={32}
-              color={theme.colors.primary}
-            />
-          </TouchableOpacity>
-        )}
-      />
-      <Card.Content>
-        <Text
-          variant="titleLarge"
-          numberOfLines={2}
-          ellipsizeMode="tail"
-          style={[
-            theme.fonts.bodyMedium,
-            { color: theme.colors.onSurface },
-          ]}
-        >
-          {location}
-        </Text>
-      </Card.Content>
-    </Card>
-  );
-};
-
 export default function HomePage() {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const [searchQuery, setSearchQuery] = useState('');
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
   const [selectedSpellId, setSelectedSpellId] = useState('');
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
   const spells = useAppSelector((state) => state.spellsReducer.spells); // 从 store 中读取 spells 列表
 
-  const spellCard = spells.map(item => {
+  const spellCards = spells.map(item => {
     return {
       id: item.id,
       duration: item.createdAt,
       location: item.description,
+      playCount: item.playCount,
+      shareCount: item.shareCount,
+      imageUrl: item.image,
       title: item.name,
       uri: item.uri,
     }
   })
   // 卡片数据数组
-  const spellCards = spellCard;
-
-  const handleCreateNewSpell = () => {
-    navigation.navigate('MainTabs', {
-      screen: 'Spell',
-      params: { screen: 'SpellPage' },
-    });
-  };
-
   const closePlayer = () => {
     setIsPlayerVisible(false);
   };
@@ -117,12 +46,6 @@ export default function HomePage() {
   const handlePlayPress = (cardId: string) => {
     setSelectedSpellId(cardId);
     setIsPlayerVisible(true);
-    // navigation.navigate('MainTabs', {
-    //   screen: 'Spell',
-    //   params: { screen: 'RecordPage', params: {
-    //     spellId: cardId,
-    //   }},
-    // });
   };
 
   return (
@@ -131,23 +54,32 @@ export default function HomePage() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Searchbar
-          placeholder="Search"
-          placeholderTextColor={theme.colors.onSurfaceDisabled}
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchbar}
-        />
-        
+        <ThemedText 
+          type="title"
+          style={{ fontSize: 24, letterSpacing: 0.5 }}
+          lightColor={theme.colors.primary}
+          darkColor={theme.colors.primary}
+        >
+          My Spells
+        </ThemedText>
         {spellCards.map((card) => (
-          <SpellCard
+          <Card
             key={card.id}
+            title={card.title}
             duration={card.duration}
             location={card.location}
-            title={card.title}
+            playCount={card.playCount || 10}  // 添加播放次数
+            shareCount={card.shareCount || 110} // 添加分享次数
+            imageUrl={card.imageUrl} // 添加图片URL
             onPlayPress={() => handlePlayPress(card.id)}
+            style={styles.cardStyle} // 自定义样式示例
           />
         ))}
+        <ThemedText           
+          type="title"
+          style={{ fontSize: 24, letterSpacing: 0.5 }}
+                   lightColor={theme.colors.primary}
+          darkColor={theme.colors.primary}>Explore</ThemedText>
       </ScrollView>
       <AudioPlayerDrawer 
         spellId={selectedSpellId}
@@ -155,14 +87,6 @@ export default function HomePage() {
         onClose={closePlayer}
         onDelete={handleDelete}
       />
-
-      {/* <FAB
-        style={styles.fab}
-        icon={() => (
-          <Ionicons name="sparkles" size={24} color={theme.colors.onSurface} />
-        )}
-        onPress={handleCreateNewSpell}
-      /> */}
     </SafeAreaView>
   );
 }
@@ -174,16 +98,14 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 8,
-    paddingBottom: 80,
+    // paddingBottom: 80,
   },
-  searchbar: {
-    margin: 8,
+  cardStyle: {
+
   },
-  card: {
-    marginVertical: 16,
-    marginHorizontal: 8,
-    paddingHorizontal: 8,
-    borderRadius: 12,
+  title: {
+    fontSize: 46,
+
   },
   fab: {
     position: 'absolute',

@@ -132,7 +132,7 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator 
       initialRouteName='MainTabs'
-      screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+      screenOptions={{ headerShown: false}}
     >
       <Stack.Screen name='Welcome' component={WelcomePage} />
       <Stack.Screen name='MainTabs' component={MainTabs} />

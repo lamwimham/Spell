@@ -4,6 +4,9 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // 定义单个咒语的类型
 export type Spell = {
+  shareCount: any;
+  playCount: any;
+  image: string | undefined;
   id: string;
   name: string;
   uri: string;

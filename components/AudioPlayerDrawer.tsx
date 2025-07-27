@@ -1,5 +1,4 @@
 import { RootState } from '@/store';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -311,11 +310,11 @@ export default function AudioPlayerDrawer({
               <Text variant='titleMedium' style={styles.title}>
                 {targetSpell?.name || '音频播放器'}
               </Text>
-              <IconButton icon='close' size={20} onPress={handleClose} />
+              {/* <IconButton icon='close' size={20} onPress={handleClose} /> */}
             </View>
 
             {/* 错误提示 */}
-            {error && (
+            {/* {error && (
               <View style={styles.errorContainer}>
                 <MaterialCommunityIcons
                   name='alert-circle'
@@ -329,7 +328,7 @@ export default function AudioPlayerDrawer({
                   {error}
                 </Text>
               </View>
-            )}
+            )} */}
 
             {/* 进度条 */}
             <View style={styles.progressContainer}>
@@ -363,20 +362,20 @@ export default function AudioPlayerDrawer({
               {isLoading ? (
                 <ActivityIndicator
                   animating={true}
-                  size={40}
+                  size={28}
                   color={theme.colors.primary}
                   style={styles.loadingIndicator}
                 />
               ) : (
                 <IconButton
                   icon={isPlaying ? 'pause' : 'play'}
-                  size={48}
+                  size={28}
                   onPress={togglePlayPause}
                   style={[
                     styles.playButton,
                     {
                       backgroundColor: theme.colors.primaryContainer,
-                      marginHorizontal: 16,
+                      // marginHorizontal: 16,
                     },
                   ]}
                   iconColor={theme.colors.onPrimaryContainer}
@@ -429,41 +428,41 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
+    padding: 10,
     zIndex: 100,
   },
   card: {
-    borderRadius: 16,
-    elevation: 8,
+    borderRadius: 8,
+    elevation: 0,
   },
   content: {
-    paddingVertical: 16,
+    paddingVertical: 8,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 1,
   },
   title: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 0,
     fontWeight: 'bold',
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 1,
     padding: 8,
     borderRadius: 8,
     backgroundColor: 'rgba(255, 0, 0, 0.1)',
   },
   errorText: {
-    marginLeft: 8,
+    marginLeft: 0,
     flex: 1,
   },
   progressContainer: {
-    marginBottom: 24,
+    marginBottom: 2,
   },
   progressBar: {
     height: 8,
@@ -475,8 +474,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   playButton: {
-    width: 72,
-    height: 72,
     borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
@@ -487,15 +484,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 16,
   },
   playButtonContent: {
     width: '100%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 0, // 新增：移除外边距
-    padding: 0, // 新增：移除内边距
+
   },
   loopIndicator: {
     alignItems: 'center',
@@ -505,8 +500,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(94, 96, 206, 0.1)',
   },
   loadingIndicator: {
-    width: 72,
-    height: 72,
+    // width: 72,
+    // height: 72,
     justifyContent: 'center',
     alignItems: 'center',
   },
