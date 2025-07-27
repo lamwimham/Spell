@@ -51,7 +51,7 @@ const AIRoute = memo(function AIRoute() {
             Enter Your Wish
           </Text>
           <TextInput
-            label='Title'
+            label='Wish'
             value={goal}
             onChangeText={setGoal}
             mode='outlined'
@@ -140,7 +140,7 @@ const ManualRoute = memo(function ManualRoute() {
           </Text>
 
           <TextInput
-            label='Title'
+            label='Wish'
             value={goal}
             onChangeText={setGoal}
             mode='outlined'
