@@ -127,14 +127,30 @@ function MainTabs() {
   );
 }
 
+// 欢迎页导航栈（独立于主导航）
+function WelcomeStack() {
+  return (
+    <Stack.Navigator
+      initialRouteName="Welcome"
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="Welcome" component={WelcomePage} />
+    </Stack.Navigator>
+  );
+}
+
 // 根导航器
 export default function AppNavigator() {
   return (
     <Stack.Navigator 
-      initialRouteName='MainTabs'
-      screenOptions={{ headerShown: false}}
+      initialRouteName='WelcomeStack'
+
+      screenOptions={{ 
+        headerBackAccessibilityLabel: undefined,
+        headerShown: false,
+      }}
     >
-      <Stack.Screen name='Welcome' component={WelcomePage} />
+      <Stack.Screen name='WelcomeStack' component={WelcomeStack} />
       <Stack.Screen name='MainTabs' component={MainTabs} />
     </Stack.Navigator>
   );

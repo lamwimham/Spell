@@ -1,20 +1,13 @@
 {
   "compilerOptions": {
     "strict": true,
+    "baseUrl": ".", // 必须添加此项
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/types/*": [
-        "./src/types/*"
-      ]
+      "@/types/*": ["./src/types/*"],
+      "@/*": ["./*"] // 确保此项存在
     },
     "jsx": "react-native",
-    "types": [
-      "react",
-      "react-native",
-      "jest"
-    ]
+    "types": ["react", "react-native", "jest"]
   },
   "include": [
     "**/*.ts",

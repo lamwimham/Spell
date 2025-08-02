@@ -6,7 +6,8 @@ import 'react-native-reanimated';
 // app/_layout.tsx
 import { store } from '@/store'; // 确保路径正确
 import { Provider } from 'react-redux';
-
+// App.js 或 App.tsx
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { enableScreens } from 'react-native-screens';
 
 import { SafeAreaProvider } from 'react-native-safe-area-context'; // ✅ 引入 SafeAreaProvider
@@ -24,7 +25,7 @@ const customTheme: MD3Theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: '#FB4141',
-    secondary: '#FF9B2F',
+    secondary: '#B4E50D',
     error: '#F44336',
   },
 };
@@ -43,12 +44,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <Provider store={store}>
-      <PaperProvider theme={customTheme}>
-        <AppNavigator />
-        <StatusBar style="auto" />
-      </PaperProvider>
-      </Provider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Provider store={store}>
+          <PaperProvider theme={customTheme}>
+            <AppNavigator />
+            <StatusBar style="auto" />
+          </PaperProvider>
+        </Provider>
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   );
 }
