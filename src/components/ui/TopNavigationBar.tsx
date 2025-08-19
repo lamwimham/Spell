@@ -8,6 +8,8 @@ interface TopNavigationBarProps {
   showSettingsButton?: boolean;
   onBackPress?: () => void;
   onSettingsPress?: () => void;
+  leftIconName?: string;
+  onLeftIconPress?: () => void;
   rightIconName?: string;
   onRightIconPress?: () => void;
   backgroundColor?: string;
@@ -25,6 +27,8 @@ export function TopNavigationBar({
   showSettingsButton = false,
   onBackPress,
   onSettingsPress,
+  leftIconName,
+  onLeftIconPress,
   rightIconName,
   onRightIconPress,
   backgroundColor = '#FDFCFF',
@@ -33,7 +37,11 @@ export function TopNavigationBar({
 }: TopNavigationBarProps) {
   return (
     <View style={[styles.header, { backgroundColor }]}>
-      {showBackButton ? (
+      {leftIconName ? (
+        <TouchableOpacity style={styles.backButton} onPress={onLeftIconPress}>
+          <Icon name={leftIconName} size={24} color={iconColor} />
+        </TouchableOpacity>
+      ) : showBackButton ? (
         <TouchableOpacity style={styles.backButton} onPress={onBackPress}>
           <Icon name="chevron-back" size={24} color={iconColor} />
         </TouchableOpacity>

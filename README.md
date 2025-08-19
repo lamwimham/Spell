@@ -8,6 +8,7 @@
 - [快速开始](#快速开始)
 - [项目结构](#项目结构)
 - [开发指南](#开发指南)
+- [通义千问 API 集成](#通义千问-api-集成)
 - [测试](#测试)
 - [构建和部署](#构建和部署)
 - [故障排除](#故障排除)
@@ -157,6 +158,122 @@ const newSlice = createSlice({
     // 定义 reducers
   },
 });
+```
+
+## 🤖 通义千问 API 集成
+
+SpellApp 现在集成了通义千问 API，可以为应用提供强大的 AI 能力。
+
+### 安装和配置
+
+1. 获取 API Key：
+
+   - 访问 [阿里云控制台](https://dashscope.console.aliyun.com/)
+   - 创建应用并获取 API Key
+
+2. 配置环境变量：
+   ```bash
+   # 在项目根目录创建 .env 文件
+   echo "QWEN_API_KEY=your_api_key_here" > .env
+   ```
+
+### 使用方法
+
+#### Hook 方式（推荐）
+
+```typescript
+import { useQwenChat } from './src/services/qwen';
+
+const MyComponent = () => {
+  const {
+    loading,
+    error,
+    messages,
+    sendMessage,
+    resetConversation
+  } = useQwenChat({
+    apiKey: process.env.QWEN_API_KEY,
+    model: 'qwen-max',
+    parameters: {
+      temperature: 0.8,
+      max_tokens: 1500,
+    }
+  });
+
+  const handleSend = async () => {
+    try {
+      await sendMessage("你好，通义千问！");
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  };
+
+  return (
+    // 组件渲染逻辑
+  );
+};
+```
+
+#### 客户端方式
+
+```typescript
+import { QwenAPI } from './src/services/qwen';
+
+const qwenAPI = new QwenAPI(process.env.QWEN_API_KEY);
+
+const chatCompletion = async () => {
+  try {
+    const response = await qwenAPI.chatCompletion({
+      model: 'qwen-max',
+      input: {
+        messages: [{ role: 'user', content: '你好，通义千问！' }],
+      },
+    });
+
+    console.log(response.output.text);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+```
+
+### API 文档
+
+#### 主要类型
+
+- `QwenMessage`: 定义消息角色和内容
+- `QwenChatRequest`: 聊天请求参数
+- `QwenChatResponse`: 聊天响应格式
+
+#### 支持的模型
+
+- `qwen-turbo`: 速度快，成本低
+- `qwen-plus`: 平衡速度和效果
+- `qwen-max`: 效果最佳，适合复杂任务
+
+#### 参数说明
+
+- `temperature`: 控制随机性 (0-2)
+- `top_p`: 核采样参数 (0-1)
+- `max_tokens`: 最大生成长度
+- `enable_search`: 是否启用互联网搜索
+
+### 错误处理
+
+API 封装包含完整的错误处理机制：
+
+```typescript
+try {
+  const response = await qwenAPI.chatCompletion(request);
+} catch (error) {
+  if (error.message.includes('Qwen API Error')) {
+    // 处理 API 错误
+  } else if (error.message.includes('Network error')) {
+    // 处理网络错误
+  } else {
+    // 处理其他错误
+  }
+}
 ```
 
 ## 🧪 测试

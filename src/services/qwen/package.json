@@ -1,0 +1,17 @@
+{
+  "name": "@services/qwen",
+  "version": "1.0.0",
+  "description": "通义千问 API 封装",
+  "main": "index.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "qwen",
+    "dashscope",
+    "api",
+    "react-native"
+  ],
+  "author": "SpellApp Team",
+  "license": "MIT"
+}

@@ -32,12 +32,12 @@ interface VoiceItem {
 }
 
 const voiceData: VoiceItem[] = [
-  { id: '1', title: 'yt-script-figma.mp3', duration: '13m 24s', size: '3.9mb' },
-  { id: '2', title: 'lao-tzu-quote.mp3', duration: '0m 45s', size: '35kb' },
-  { id: '3', title: 'figma-tutorial.mp3', duration: '10m 5s', size: '2.5mb' },
-  { id: '4', title: 'emotional-speech.mp3', duration: '16m 46s', size: '4.7mb' },
-  { id: '5', title: 'yt-funny-video-script.mp3', duration: '00m 00s', size: '00mb' },
-  { id: '6', title: 'yt-script-figma-autolayou...', duration: '24m 10s', size: '4.6mb' },
+  { id: '1', title: 'loss wight', duration: '13m 24s', size: '3.9mb' },
+  { id: '2', title: 'loss wight', duration: '0m 45s', size: '35kb' },
+  { id: '3', title: 'loss wight', duration: '10m 5s', size: '2.5mb' },
+  { id: '4', title: 'loss wight', duration: '16m 46s', size: '4.7mb' },
+  { id: '5', title: 'loss wight', duration: '00m 00s', size: '00mb' },
+  { id: '6', title: 'no smoking', duration: '24m 10s', size: '4.6mb' },
 ];
 
 // 模拟删除API
@@ -221,7 +221,8 @@ export default function HomeScreen() {
         <TopNavigationBar
           title="Your library"
           showBackButton={true}
-          onBackPress={() => setIsDrawerVisible(true)}
+          leftIconName="person-circle-outline"
+          onLeftIconPress={() => setIsDrawerVisible(true)}
           rightIconName="trash-outline"
           onRightIconPress={toggleDeleteMode}
           iconColor="#7572B7"

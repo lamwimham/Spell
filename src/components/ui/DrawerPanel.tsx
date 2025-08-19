@@ -15,9 +15,9 @@ import { ToggleSwitch } from './ToggleSwitch';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.75; // 75%屏幕宽度
-const PAN_RESPONDER_THRESHOLD = 20;
-const PAN_RESPONDER_VELOCITY_THRESHOLD = -0.5;
-const PAN_RESPONDER_DISTANCE_THRESHOLD = -50;
+const PAN_RESPONDER_THRESHOLD = 15; // 降低阈值，更容易触发
+const PAN_RESPONDER_VELOCITY_THRESHOLD = -0.3; // 降低速度阈值
+const PAN_RESPONDER_DISTANCE_THRESHOLD = -30; // 降低距离阈值
 
 interface DrawerPanelProps {
   isVisible: boolean;
@@ -101,18 +101,21 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
     dailyReminder: true,
   });
 
-  // 显示/隐藏动画
+  // 显示/隐藏动画 - 增强动画效果
   useEffect(() => {
     if (isVisible) {
       Animated.parallel([
-        Animated.timing(translateX, {
+        Animated.spring(translateX, {
           toValue: 0,
-          duration: 300,
           useNativeDriver: true,
+          tension: 100,
+          friction: 8,
+          restSpeedThreshold: 0.1,
+          restDisplacementThreshold: 0.1,
         }),
         Animated.timing(overlayOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 350,
           useNativeDriver: true,
         }),
       ]).start();
@@ -120,47 +123,64 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: -DRAWER_WIDTH,
-          duration: 250,
+          duration: 280,
           useNativeDriver: true,
         }),
         Animated.timing(overlayOpacity, {
           toValue: 0,
-          duration: 250,
+          duration: 280,
           useNativeDriver: true,
         }),
       ]).start();
     }
   }, [isVisible, translateX, overlayOpacity]);
 
-  // 使用PanResponder替代PanGestureHandler
+  // 使用PanResponder替代PanGestureHandler - 增强手势响应
   const panResponder = useRef(
     PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // 当用户在抽屉面板上水平滑动时触发
+        // 更敏感的手势检测
         return (
-          Math.abs(gestureState.dx) > PAN_RESPONDER_THRESHOLD &&
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
+          Math.abs(gestureState.dx) > PAN_RESPONDER_THRESHOLD || Math.abs(gestureState.vx) > 0.2
         );
       },
+      onPanResponderGrant: () => {
+        // 手势开始时添加反馈
+        translateX.setOffset(translateX._value);
+        translateX.setValue(0);
+      },
       onPanResponderMove: (evt, gestureState) => {
-        // 限制拖动范围，不能超过抽屉宽度
+        // 限制拖动范围，添加阻尼效果
         const dx = Math.min(gestureState.dx, 0);
-        translateX.setValue(dx);
+        const dampedDx = dx * 0.8; // 添加阻尼效果
+        translateX.setValue(dampedDx);
       },
       onPanResponderRelease: (evt, gestureState) => {
-        // 根据手势结束时的位置和速度决定是否关闭抽屉
-        if (
+        translateX.flattenOffset();
+
+        // 更灵敏的关闭条件
+        const shouldClose =
           gestureState.dx < PAN_RESPONDER_DISTANCE_THRESHOLD ||
-          gestureState.vx < PAN_RESPONDER_VELOCITY_THRESHOLD
-        ) {
-          onClose();
+          gestureState.vx < PAN_RESPONDER_VELOCITY_THRESHOLD ||
+          translateX._value < -DRAWER_WIDTH * 0.3;
+
+        if (shouldClose) {
+          // 关闭动画更快更明显
+          Animated.timing(translateX, {
+            toValue: -DRAWER_WIDTH,
+            duration: 200,
+            useNativeDriver: true,
+          }).start(() => onClose());
         } else {
-          // 如果不满足关闭条件，则弹回原位
+          // 弹回动画更有弹性
           Animated.spring(translateX, {
             toValue: 0,
             useNativeDriver: true,
-            restSpeedThreshold: 100,
-            restDisplacementThreshold: 40,
+            tension: 120,
+            friction: 7,
+            restSpeedThreshold: 0.1,
+            restDisplacementThreshold: 0.1,
           }).start();
         }
       },
