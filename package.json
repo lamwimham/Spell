@@ -5,6 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "ios-simulator": "react-native run-ios --simulator=\"iPhone 16\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json}\"",
@@ -13,6 +14,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@react-native-community/slider": "^4.5.7",
     "@react-native/new-app-screen": "0.81.0",
     "@react-navigation/bottom-tabs": "^7.4.6",
     "@react-navigation/native": "^7.1.17",

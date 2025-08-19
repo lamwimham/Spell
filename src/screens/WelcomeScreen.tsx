@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 120, // 调整为统一导航栏预留空间
     paddingHorizontal: 20,
   },
   title: {

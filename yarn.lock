@@ -1559,6 +1559,11 @@
     "prompts" "^2.4.2"
     "semver" "^7.5.2"
 
+"@react-native-community/slider@^4.5.7":
+  "integrity" "sha512-WMDDZjNF2Bd8M8TrSqKf5xhM9ikdfCHtSPur64Ow3bB/OVrKufUQZ59NmYdNZNeGPvcHHTsafuYTY8zfZfbchQ=="
+  "resolved" "https://registry.npmmirror.com/@react-native-community/slider/-/slider-4.5.7.tgz"
+  "version" "4.5.7"
+
 "@react-native/assets-registry@0.81.0":
   "integrity" "sha512-rZs8ziQ1YRV3Z5Mw5AR7YcgI3q1Ya9NIx6nyuZAT9wDSSjspSi+bww+Hargh/a4JfV2Ajcxpn9X9UiFJr1ddPw=="
   "resolved" "https://registry.npmmirror.com/@react-native/assets-registry/-/assets-registry-0.81.0.tgz"
