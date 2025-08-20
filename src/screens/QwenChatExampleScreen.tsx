@@ -9,7 +9,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { useQwenChat } from '../services/qwen';
+import { useQwenChat } from '../hooks/useQwen';
 
 const QwenChatExampleScreen = () => {
   const [inputText, setInputText] = useState('');

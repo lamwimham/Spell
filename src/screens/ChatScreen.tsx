@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useQwenChatWithDynamicSystemPrompt } from '../services/qwen/hooks';
+import { useQwenChatWithDynamicSystemPrompt } from '../hooks/useQwen';
 import { useNavigation } from '@react-navigation/native';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 import { SystemPromptSelector } from '../components/ui/SystemPromptSelector';

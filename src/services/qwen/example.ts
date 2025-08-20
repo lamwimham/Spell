@@ -47,7 +47,7 @@ export const SYSTEM_PROMPTS = {
 
 // 使用示例
 /*
-import { useQwenChat } from '../hooks/useLLM';
+import { useQwenChat } from '../hooks/useQwen';
 import { SYSTEM_PROMPTS } from '../services/qwen/example';
 
 // 在组件中使用

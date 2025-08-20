@@ -1,10 +1,11 @@
 // 通义千问 Hooks
 
-import { useState, useCallback } from 'react';
-import { DEFAULT_MODEL, DEFAULT_PARAMETERS } from '@services/qwen/config';
-import { QwenAPI } from '@services/qwen/client';
-import { QwenChatRequest, QwenChatResponse, QwenMessage } from '@services/qwen/types';
-import { ENV } from '@services/qwen/env';
+import { useState, useCallback, useMemo } from 'react';
+import { DEFAULT_MODEL, DEFAULT_PARAMETERS } from '../services/qwen/config';
+import { QwenAPI } from '../services/qwen/client';
+import { QwenChatRequest, QwenChatResponse, QwenMessage } from '../services/qwen/types';
+import { ENV } from '../services/qwen/env';
+import { SYSTEM_PROMPTS } from '../services/qwen/example';
 
 interface UseQwenChatOptions {
   apiKey?: string; // 可选参数，如果未提供则从环境变量获取
@@ -13,6 +14,11 @@ interface UseQwenChatOptions {
   parameters?: QwenChatRequest['parameters'];
 }
 
+/**
+ * 基础聊天钩子
+ * @param options 聊天选项
+ * @returns 聊天钩子对象
+ */
 export const useQwenChat = ({
   apiKey,
   model = DEFAULT_MODEL,
@@ -28,7 +34,7 @@ export const useQwenChat = ({
   const [messages, setMessages] = useState<QwenMessage[]>([]);
   const [lastResponse, setLastResponse] = useState<QwenMessage | null>(null);
 
-  const qwenAPI = new QwenAPI(resolvedApiKey);
+  const qwenAPI = useMemo(() => new QwenAPI(resolvedApiKey), [resolvedApiKey]);
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -91,7 +97,7 @@ export const useQwenChat = ({
         setLoading(false);
       }
     },
-    [messages, resolvedApiKey, model, systemRole, parameters],
+    [messages, resolvedApiKey, model, systemRole, parameters, qwenAPI],
   );
 
   const resetConversation = useCallback(() => {
@@ -135,5 +141,75 @@ export const useQwenChat = ({
     sendMessage,
     resetConversation,
     getFullConversation,
+  };
+};
+
+/**
+ * 创建一个预设系统角色的聊天钩子
+ * @param systemPromptKey 系统提示词的键名
+ * @returns 聊天钩子
+ */
+export const useQwenChatWithSystemPrompt = (systemPromptKey: keyof typeof SYSTEM_PROMPTS) => {
+  const systemPrompt = SYSTEM_PROMPTS[systemPromptKey] as QwenMessage;
+  return useQwenChat({ systemRole: systemPrompt });
+};
+
+/**
+ * 创建一个自定义系统角色的聊天钩子
+ * @param content 自定义系统提示词内容
+ * @returns 聊天钩子
+ */
+export const useQwenChatWithCustomSystemPrompt = (content: string) => {
+  const customSystemPrompt: QwenMessage = {
+    role: 'system',
+    content,
+  };
+  return useQwenChat({ systemRole: customSystemPrompt });
+};
+
+/**
+ * 创建一个可以动态切换系统角色的聊天钩子
+ */
+export const useQwenChatWithDynamicSystemPrompt = () => {
+  const [systemPrompt, setSystemPrompt] = useState<QwenMessage | undefined>(undefined);
+  const { sendMessage, resetConversation, ...rest } = useQwenChat({ systemRole: systemPrompt });
+
+  // 设置预定义的系统角色
+  const setSystemPromptByKey = useCallback(
+    (key: keyof typeof SYSTEM_PROMPTS) => {
+      const newSystemPrompt = SYSTEM_PROMPTS[key] as QwenMessage;
+      setSystemPrompt(newSystemPrompt);
+      resetConversation(); // 切换角色时重置对话
+    },
+    [resetConversation],
+  );
+
+  // 设置自定义系统角色
+  const setCustomSystemPrompt = useCallback(
+    (content: string) => {
+      const newSystemPrompt: QwenMessage = {
+        role: 'system',
+        content,
+      };
+      setSystemPrompt(newSystemPrompt);
+      resetConversation(); // 切换角色时重置对话
+    },
+    [resetConversation],
+  );
+
+  // 清除系统角色
+  const clearSystemPrompt = useCallback(() => {
+    setSystemPrompt(undefined);
+    resetConversation();
+  }, [resetConversation]);
+
+  return {
+    ...rest,
+    sendMessage,
+    resetConversation,
+    setSystemPromptByKey,
+    setCustomSystemPrompt,
+    clearSystemPrompt,
+    currentSystemPrompt: systemPrompt,
   };
 };
