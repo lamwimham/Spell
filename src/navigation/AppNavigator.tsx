@@ -7,6 +7,7 @@ import PlayScreen from '../screens/PlayScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { AddCardScreen } from '../screens/AddCardScreen';
 import { RecordScreen } from '../screens/RecordScreen';
+import AudioKitExampleScreen from '../screens/AudioKitExampleScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,7 @@ const AppNavigator = () => {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="AddCard" component={AddCardScreen} />
         <Stack.Screen name="Record" component={RecordScreen} />
+        <Stack.Screen name="AudioKitExample" component={AudioKitExampleScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

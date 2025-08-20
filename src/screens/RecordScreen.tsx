@@ -317,7 +317,7 @@ export function RecordScreen() {
 
     try {
       // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve: any) => setTimeout(resolve, 2000));
 
       // 模拟生成的脚本文案
       const generatedScript = `欢迎收听关于"${title}"的内容。\n\n在这里，我们将深入探讨这个主题的各个方面。\n\n首先，让我们了解一下基本概念...\n\n接下来，我们会分享一些实用的建议和技巧...\n\n最后，总结一下今天的内容...`;

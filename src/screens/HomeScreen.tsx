@@ -244,6 +244,15 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       />
 
+      {/* FAB按钮 - AudioKit示例 */}
+      <TouchableOpacity
+        style={[styles.fabButton, { bottom: 150 }]}
+        onPress={() => navigation.navigate('AudioKitExample' as never)}
+        activeOpacity={0.8}
+      >
+        <Icon name="musical-note" size={28} color="#FFFFFF" />
+      </TouchableOpacity>
+
       {/* FAB按钮 - 录音 */}
       <TouchableOpacity
         style={styles.fabButton}
