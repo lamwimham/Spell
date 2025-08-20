@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -151,6 +152,7 @@ export function RecordScreen() {
   const [amplitude, setAmplitude] = useState(0.5);
   const [title, setTitle] = useState(params.title || '');
   const [script, setScript] = useState(params.script || '');
+  const [isGeneratingScript, setIsGeneratingScript] = useState(false); // AI生成脚本状态
   const [recordings, setRecordings] = useState<RecordingFile[]>([
     {
       id: '1',
@@ -303,6 +305,36 @@ export function RecordScreen() {
     };
   }, []);
 
+  // AI生成脚本文案的函数（模拟实现）
+  const generateScriptFromAI = async () => {
+    if (!title.trim()) {
+      Alert.alert('提示', '请输入录音标题');
+      return;
+    }
+
+    // 设置生成状态
+    setIsGeneratingScript(true);
+
+    try {
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 模拟生成的脚本文案
+      const generatedScript = `欢迎收听关于"${title}"的内容。\n\n在这里，我们将深入探讨这个主题的各个方面。\n\n首先，让我们了解一下基本概念...\n\n接下来，我们会分享一些实用的建议和技巧...\n\n最后，总结一下今天的内容...`;
+
+      // 更新脚本文案
+      setScript(generatedScript);
+
+      Alert.alert('成功', 'AI已为您生成脚本文案');
+    } catch (error) {
+      console.error('AI生成脚本失败:', error);
+      Alert.alert('错误', '生成脚本失败，请稍后重试');
+    } finally {
+      // 重置生成状态
+      setIsGeneratingScript(false);
+    }
+  };
+
   // 渲染录音控制按钮
   const renderRecordingControls = () => {
     switch (recordingState) {
@@ -397,13 +429,29 @@ export function RecordScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* 文稿信息 */}
         <View style={styles.scriptSection}>
-          <InputText
-            label="录音标题"
-            placeholder="输入录音标题"
-            value={title}
-            onChangeText={setTitle}
-            disabled={recordingState === RecordingState.RECORDING}
-          />
+          <View style={styles.titleContainer}>
+            <InputText
+              label="录音标题"
+              placeholder="输入录音标题"
+              value={title}
+              onChangeText={setTitle}
+              disabled={recordingState === RecordingState.RECORDING}
+              style={styles.titleInput}
+              testID="input-text-input"
+            />
+            <TouchableOpacity
+              style={styles.aiButton}
+              onPress={generateScriptFromAI}
+              disabled={isGeneratingScript || recordingState === RecordingState.RECORDING}
+              testID="ai-generate-button"
+            >
+              {isGeneratingScript ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Icon name="sparkles" size={20} color="#FFFFFF" />
+              )}
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.scriptContainer}>
             <InputTextarea
@@ -412,8 +460,9 @@ export function RecordScreen() {
               value={script}
               onChangeText={setScript}
               height={100}
-              disabled={recordingState === RecordingState.RECORDING}
+              disabled={recordingState === RecordingState.RECORDING || isGeneratingScript}
               helperText="可以根据文稿内容进行录制，也可以自由发挥"
+              testID="input-textarea-input"
             />
           </View>
         </View>
@@ -504,6 +553,23 @@ const styles = StyleSheet.create({
   scriptSection: {
     marginTop: 16,
     marginBottom: 32,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  titleInput: {
+    flex: 1,
+  },
+  aiButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#7572B7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+    marginBottom: 8,
   },
   scriptContainer: {
     marginTop: 16,
