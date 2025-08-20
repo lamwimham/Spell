@@ -49,9 +49,6 @@ interface AudioKitHook {
 }
 
 const useAudioKit = (): AudioKitHook => {
-  // 音频播放器实例
-  const audioRecorderPlayer = useRef(new AudioRecorderPlayer()).current;
-
   // 状态管理
   const [audioState, setAudioState] = useState<AudioState>({
     isRecording: false,
@@ -73,7 +70,7 @@ const useAudioKit = (): AudioKitHook => {
   // 初始化
   useEffect(() => {
     // 设置默认的回调间隔为500ms
-    audioRecorderPlayer.setSubscriptionDuration(0.5);
+    AudioRecorderPlayer.setSubscriptionDuration(0.5);
 
     // 清理函数
     return () => {
@@ -84,16 +81,16 @@ const useAudioKit = (): AudioKitHook => {
   // 清理资源
   const cleanup = () => {
     // 移除所有监听器
-    audioRecorderPlayer.removeRecordBackListener();
-    audioRecorderPlayer.removePlayBackListener();
+    AudioRecorderPlayer.removeRecordBackListener();
+    AudioRecorderPlayer.removePlayBackListener();
 
     // 停止录音和播放
     if (audioState.isRecording) {
-      audioRecorderPlayer.stopRecorder().catch(() => {});
+      AudioRecorderPlayer.stopRecorder().catch(() => {});
     }
 
     if (audioState.isPlaying) {
-      audioRecorderPlayer.stopPlayer().catch(() => {});
+      AudioRecorderPlayer.stopPlayer().catch(() => {});
     }
   };
 
@@ -117,16 +114,16 @@ const useAudioKit = (): AudioKitHook => {
       };
 
       // 设置录音进度监听器
-      audioRecorderPlayer.addRecordBackListener(e => {
+      AudioRecorderPlayer.addRecordBackListener(e => {
         setAudioState(prev => ({
           ...prev,
           recordSecs: e.currentPosition,
-          recordTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
+          recordTime: AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
         }));
       });
 
       // 开始录音
-      const uri = await audioRecorderPlayer.startRecorder(undefined, audioSet, true);
+      const uri = await AudioRecorderPlayer.startRecorder(undefined, audioSet, true);
       recordingUri.current = uri;
 
       setAudioState(prev => ({
@@ -152,8 +149,8 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      const uri = await audioRecorderPlayer.stopRecorder();
-      audioRecorderPlayer.removeRecordBackListener();
+      const uri = await AudioRecorderPlayer.stopRecorder();
+      AudioRecorderPlayer.removeRecordBackListener();
 
       setAudioState(prev => ({
         ...prev,
@@ -174,7 +171,7 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      const result = await audioRecorderPlayer.pauseRecorder();
+      const result = await AudioRecorderPlayer.pauseRecorder();
 
       setAudioState(prev => ({
         ...prev,
@@ -194,7 +191,7 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      const result = await audioRecorderPlayer.resumeRecorder();
+      const result = await AudioRecorderPlayer.resumeRecorder();
 
       setAudioState(prev => ({
         ...prev,
@@ -239,12 +236,12 @@ const useAudioKit = (): AudioKitHook => {
       playingUri.current = uri;
 
       // 设置播放进度监听器
-      audioRecorderPlayer.addPlayBackListener(e => {
+      AudioRecorderPlayer.addPlayBackListener(e => {
         // 检查是否播放完成
         if (e.currentPosition >= e.duration) {
           if (isLooping.current) {
             // 循环播放
-            audioRecorderPlayer.seekToPlayer(0);
+            AudioRecorderPlayer.seekToPlayer(0);
           } else {
             // 播放完成
             stopPlaying();
@@ -255,12 +252,12 @@ const useAudioKit = (): AudioKitHook => {
           ...prev,
           currentPosition: e.currentPosition,
           totalDuration: e.duration,
-          playTime: audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
-          duration: audioRecorderPlayer.mmssss(Math.floor(e.duration)),
+          playTime: AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
+          duration: AudioRecorderPlayer.mmssss(Math.floor(e.duration)),
         }));
       });
 
-      const result = await audioRecorderPlayer.startPlayer(uri);
+      const result = await AudioRecorderPlayer.startPlayer(uri);
 
       setAudioState(prev => ({
         ...prev,
@@ -281,7 +278,7 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      const result = await audioRecorderPlayer.pausePlayer();
+      const result = await AudioRecorderPlayer.pausePlayer();
 
       setAudioState(prev => ({
         ...prev,
@@ -301,7 +298,7 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      const result = await audioRecorderPlayer.resumePlayer();
+      const result = await AudioRecorderPlayer.resumePlayer();
 
       setAudioState(prev => ({
         ...prev,
@@ -321,8 +318,8 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      const result = await audioRecorderPlayer.stopPlayer();
-      audioRecorderPlayer.removePlayBackListener();
+      const result = await AudioRecorderPlayer.stopPlayer();
+      AudioRecorderPlayer.removePlayBackListener();
 
       setAudioState(prev => ({
         ...prev,
@@ -346,7 +343,7 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      return await audioRecorderPlayer.seekToPlayer(milliseconds);
+      return await AudioRecorderPlayer.seekToPlayer(milliseconds);
     } catch (err: any) {
       console.error('跳转位置失败:', err);
       throw new Error(`跳转位置失败: ${err.message || err}`);
@@ -360,7 +357,7 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      return await audioRecorderPlayer.setVolume(volume);
+      return await AudioRecorderPlayer.setVolume(volume);
     } catch (err: any) {
       console.error('设置音量失败:', err);
       throw new Error(`设置音量失败: ${err.message || err}`);
@@ -373,7 +370,7 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      return await audioRecorderPlayer.setPlaybackSpeed(speed);
+      return await AudioRecorderPlayer.setPlaybackSpeed(speed);
     } catch (err: any) {
       console.error('设置播放速度失败:', err);
       throw new Error(`设置播放速度失败: ${err.message || err}`);
