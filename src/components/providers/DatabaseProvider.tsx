@@ -1,5 +1,6 @@
 import { Database } from '@nozbe/watermelondb';
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import * as React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import database from '../../database';
 
@@ -8,7 +9,7 @@ const DatabaseContext = createContext<Database | null>(null);
 
 // 数据库提供者组件属性
 interface DatabaseProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 // 数据库提供者组件
@@ -28,7 +29,7 @@ export const DatabaseProvider: React.FC<DatabaseProviderProps> = ({ children }) 
         // 尝试执行一个简单的数据库操作来验证连接
         try {
           // 获取所有表名
-          const collections = database.collections.map((c: { name: string }) => c.name);
+          const collections = Object.keys(database.collections.map);
           console.log('数据库表:', collections);
         } catch (dbError) {
           console.warn('数据库操作测试失败，但继续初始化:', dbError);
