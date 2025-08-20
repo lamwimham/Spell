@@ -18,6 +18,7 @@ import { InputTextarea } from '../components/ui/InputTextarea';
 import { Button } from '../components/ui/Button';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 import useAudioKit from '../hooks/useAudioKit';
+import { useQwenChatWithCustomSystemPrompt } from '../hooks/useQwen';
 
 // 定义路由参数类型
 type RootStackParamList = {
@@ -151,12 +152,20 @@ export function RecordScreen() {
     getRecordingUri,
   } = useAudioKit();
 
+  // 使用Qwen AI Hook
+  const {
+    loading: isGeneratingScript,
+    error: scriptGenerationError,
+    sendMessage: generateScriptWithAI,
+  } = useQwenChatWithCustomSystemPrompt(
+    '你是一个专业的语音内容创作助手。根据用户提供的标题，生成一段适合录音的详细脚本文案。文案应该结构清晰，包含引言、主体内容和结尾总结三个部分。语言要自然流畅，适合口语表达。',
+  );
+
   // 状态管理
   const [recordingTime, setRecordingTime] = useState(0);
   const [amplitude, setAmplitude] = useState(0.5);
   const [title, setTitle] = useState(params.title || '');
   const [script, setScript] = useState(params.script || '');
-  const [isGeneratingScript, setIsGeneratingScript] = useState(false); // AI生成脚本状态
   const [recordings, setRecordings] = useState<RecordingFile[]>([
     {
       id: '1',
@@ -322,40 +331,26 @@ export function RecordScreen() {
     };
   }, []);
 
-  // AI生成脚本文案的函数（模拟实现）
+  // AI生成脚本文案的函数
   const generateScriptFromAI = async () => {
     if (!title.trim()) {
       Alert.alert('提示', '请输入录音标题');
       return;
     }
 
-    // 设置生成状态
-    setIsGeneratingScript(true);
-
     try {
-      // 模拟API调用延迟
-      await new Promise((resolve: any) => setTimeout(resolve, 2000));
-
-      // 模拟生成的脚本文案
-      const generatedScript = `欢迎收听关于"${title}"的内容。
-在这里，我们将深入探讨这个主题的各个方面。
-
-首先，让我们了解一下基本概念...
-
-接下来，我们会分享一些实用的建议和技巧...
-
-最后，总结一下今天的内容...`;
+      // 发送请求到Qwen API生成脚本
+      const response = await generateScriptWithAI(
+        `请为"${title}"这个主题生成一段详细的录音脚本文案。要求：1. 结构清晰，包含引言、主体内容和结尾总结三个部分；2. 语言自然流畅，适合口语表达；3. 内容充实有深度，时长大约3-5分钟；4. 不要使用markdown格式，直接输出纯文本。`,
+      );
 
       // 更新脚本文案
-      setScript(generatedScript);
+      setScript(response.response);
 
       Alert.alert('成功', 'AI已为您生成脚本文案');
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI生成脚本失败:', error);
-      Alert.alert('错误', '生成脚本失败，请稍后重试');
-    } finally {
-      // 重置生成状态
-      setIsGeneratingScript(false);
+      Alert.alert('错误', scriptGenerationError || '生成脚本失败，请稍后重试');
     }
   };
 
