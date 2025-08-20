@@ -17,6 +17,7 @@ import { InputText } from '../components/ui/InputText';
 import { InputTextarea } from '../components/ui/InputTextarea';
 import { Button } from '../components/ui/Button';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
+import useAudioKit from '../hooks/useAudioKit';
 
 // 定义路由参数类型
 type RootStackParamList = {
@@ -28,14 +29,6 @@ type RootStackParamList = {
 };
 
 type RecordScreenRouteProp = RouteProp<RootStackParamList, 'Record'>;
-
-// 录音状态枚举
-enum RecordingState {
-  IDLE = 'idle',
-  RECORDING = 'recording',
-  PAUSED = 'paused',
-  COMPLETED = 'completed',
-}
 
 // 录音文件接口
 interface RecordingFile {
@@ -146,8 +139,19 @@ export function RecordScreen() {
   const params = route.params || {};
   const insets = useSafeAreaInsets();
 
+  // 使用音频Hook
+  const {
+    audioState,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    resetRecording,
+    startPlaying,
+    getRecordingUri,
+  } = useAudioKit();
+
   // 状态管理
-  const [recordingState, setRecordingState] = useState<RecordingState>(RecordingState.IDLE);
   const [recordingTime, setRecordingTime] = useState(0);
   const [amplitude, setAmplitude] = useState(0.5);
   const [title, setTitle] = useState(params.title || '');
@@ -183,11 +187,9 @@ export function RecordScreen() {
   };
 
   // 开始录音
-  const startRecording = async () => {
+  const handleStartRecording = async () => {
     try {
-      // 这里应该调用实际的录音API
-      console.log('开始录音');
-      setRecordingState(RecordingState.RECORDING);
+      await startRecording();
       setRecordingTime(0);
 
       // 启动计时器
@@ -195,39 +197,48 @@ export function RecordScreen() {
         setRecordingTime(prev => prev + 1);
         setAmplitude(Math.random() * 0.8 + 0.2); // 模拟音频振幅
       }, 1000);
-    } catch (error) {
-      Alert.alert('错误', '无法开始录音，请检查麦克风权限');
+    } catch (error: any) {
+      Alert.alert('错误', error.message || '无法开始录音，请检查麦克风权限');
     }
   };
 
   // 暂停录音
-  const pauseRecording = () => {
-    console.log('暂停录音');
-    setRecordingState(RecordingState.PAUSED);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
+  const handlePauseRecording = async () => {
+    try {
+      await pauseRecording();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    } catch (error: any) {
+      Alert.alert('错误', error.message || '暂停录音失败');
     }
   };
 
   // 继续录音
-  const resumeRecording = () => {
-    console.log('继续录音');
-    setRecordingState(RecordingState.RECORDING);
+  const handleResumeRecording = async () => {
+    try {
+      await resumeRecording();
 
-    timerRef.current = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-      setAmplitude(Math.random() * 0.8 + 0.2);
-    }, 1000);
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+        setAmplitude(Math.random() * 0.8 + 0.2);
+      }, 1000);
+    } catch (error: any) {
+      Alert.alert('错误', error.message || '继续录音失败');
+    }
   };
 
   // 停止录音
-  const stopRecording = () => {
-    console.log('停止录音');
-    setRecordingState(RecordingState.COMPLETED);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
+  const handleStopRecording = async () => {
+    try {
+      await stopRecording();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      setAmplitude(0);
+    } catch (error: any) {
+      Alert.alert('错误', error.message || '停止录音失败');
     }
-    setAmplitude(0);
   };
 
   // 保存录音
@@ -243,13 +254,12 @@ export function RecordScreen() {
       duration: formatTime(recordingTime),
       size: `${(recordingTime * 0.05).toFixed(1)}MB`, // 模拟文件大小
       date: '刚刚',
-      filePath: `/path/to/${Date.now()}.m4a`,
+      filePath: getRecordingUri() || `/path/to/${Date.now()}.m4a`,
     };
 
     setRecordings(prev => [newRecording, ...prev]);
 
     // 重置状态
-    setRecordingState(RecordingState.IDLE);
     setRecordingTime(0);
     setTitle('');
     setScript('');
@@ -264,11 +274,15 @@ export function RecordScreen() {
       {
         text: '确定取消',
         style: 'destructive',
-        onPress: () => {
-          setRecordingState(RecordingState.IDLE);
-          setRecordingTime(0);
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
+        onPress: async () => {
+          try {
+            await resetRecording();
+            setRecordingTime(0);
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+            }
+          } catch (error: any) {
+            Alert.alert('错误', error.message || '取消录音失败');
           }
         },
       },
@@ -276,10 +290,13 @@ export function RecordScreen() {
   };
 
   // 播放录音
-  const playRecording = (item: RecordingFile) => {
-    console.log('播放录音:', item.title);
-    // 这里应该调用实际的播放API
-    Alert.alert('播放', `正在播放: ${item.title}`);
+  const playRecording = async (item: RecordingFile) => {
+    try {
+      await startPlaying(item.filePath);
+      Alert.alert('播放', `正在播放: ${item.title}`);
+    } catch (error: any) {
+      Alert.alert('错误', error.message || '播放失败');
+    }
   };
 
   // 删除录音
@@ -320,7 +337,14 @@ export function RecordScreen() {
       await new Promise((resolve: any) => setTimeout(resolve, 2000));
 
       // 模拟生成的脚本文案
-      const generatedScript = `欢迎收听关于"${title}"的内容。\n\n在这里，我们将深入探讨这个主题的各个方面。\n\n首先，让我们了解一下基本概念...\n\n接下来，我们会分享一些实用的建议和技巧...\n\n最后，总结一下今天的内容...`;
+      const generatedScript = `欢迎收听关于"${title}"的内容。
+在这里，我们将深入探讨这个主题的各个方面。
+
+首先，让我们了解一下基本概念...
+
+接下来，我们会分享一些实用的建议和技巧...
+
+最后，总结一下今天的内容...`;
 
       // 更新脚本文案
       setScript(generatedScript);
@@ -337,83 +361,84 @@ export function RecordScreen() {
 
   // 渲染录音控制按钮
   const renderRecordingControls = () => {
-    switch (recordingState) {
-      case RecordingState.IDLE:
-        return (
-          <TouchableOpacity
-            style={styles.recordButton}
-            onPress={startRecording}
-            activeOpacity={0.8}
-          >
-            <Icon name="mic" size={32} color="#FFFFFF" />
+    if (audioState.isRecording && !audioState.isPaused) {
+      return (
+        <View style={styles.recordingControls}>
+          <TouchableOpacity style={styles.controlButton} onPress={handlePauseRecording}>
+            <Icon name="pause" size={24} color="#7572B7" />
           </TouchableOpacity>
-        );
 
-      case RecordingState.RECORDING:
-        return (
-          <View style={styles.recordingControls}>
-            <TouchableOpacity style={styles.controlButton} onPress={pauseRecording}>
-              <Icon name="pause" size={24} color="#7572B7" />
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.recordButton, styles.recordingButton]}
+            onPress={handleStopRecording}
+          >
+            <Icon name="stop" size={32} color="#FFFFFF" />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.recordButton, styles.recordingButton]}
-              onPress={stopRecording}
-            >
-              <Icon name="stop" size={32} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.controlButton} onPress={cancelRecording}>
-              <Icon name="close" size={24} color="#FF6B6B" />
-            </TouchableOpacity>
-          </View>
-        );
-
-      case RecordingState.PAUSED:
-        return (
-          <View style={styles.recordingControls}>
-            <TouchableOpacity style={styles.controlButton} onPress={resumeRecording}>
-              <Icon name="play" size={24} color="#7572B7" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.recordButton, styles.pausedButton]}
-              onPress={stopRecording}
-            >
-              <Icon name="stop" size={32} color="#FFFFFF" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.controlButton} onPress={cancelRecording}>
-              <Icon name="close" size={24} color="#FF6B6B" />
-            </TouchableOpacity>
-          </View>
-        );
-
-      case RecordingState.COMPLETED:
-        return (
-          <View style={styles.completedControls}>
-            <Button
-              label="重新录制"
-              variant="outline"
-              onPress={() => {
-                setRecordingState(RecordingState.IDLE);
-                setRecordingTime(0);
-              }}
-              style={styles.completedButton}
-            />
-
-            <Button
-              label="保存录音"
-              variant="primary"
-              onPress={saveRecording}
-              style={styles.completedButton}
-            />
-          </View>
-        );
-
-      default:
-        return null;
+          <TouchableOpacity style={styles.controlButton} onPress={cancelRecording}>
+            <Icon name="close" size={24} color="#FF6B6B" />
+          </TouchableOpacity>
+        </View>
+      );
     }
+
+    if (audioState.isRecording && audioState.isPaused) {
+      return (
+        <View style={styles.recordingControls}>
+          <TouchableOpacity style={styles.controlButton} onPress={handleResumeRecording}>
+            <Icon name="play" size={24} color="#7572B7" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.recordButton, styles.pausedButton]}
+            onPress={handleStopRecording}
+          >
+            <Icon name="stop" size={32} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.controlButton} onPress={cancelRecording}>
+            <Icon name="close" size={24} color="#FF6B6B" />
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (audioState.isRecording === false && recordingTime > 0) {
+      return (
+        <View style={styles.completedControls}>
+          <Button
+            label="重新录制"
+            variant="outline"
+            onPress={async () => {
+              try {
+                await resetRecording();
+                setRecordingTime(0);
+              } catch (error: any) {
+                Alert.alert('错误', error.message || '重置录音失败');
+              }
+            }}
+            style={styles.completedButton}
+          />
+
+          <Button
+            label="保存录音"
+            variant="primary"
+            onPress={saveRecording}
+            style={styles.completedButton}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        style={styles.recordButton}
+        onPress={handleStartRecording}
+        activeOpacity={0.8}
+      >
+        <Icon name="mic" size={32} color="#FFFFFF" />
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -436,7 +461,7 @@ export function RecordScreen() {
                 placeholder="输入录音标题"
                 value={title}
                 onChangeText={setTitle}
-                disabled={recordingState === RecordingState.RECORDING}
+                disabled={audioState.isRecording}
                 style={styles.titleInput}
                 testID="input-text-input"
               />
@@ -444,7 +469,7 @@ export function RecordScreen() {
             <TouchableOpacity
               style={styles.aiButton}
               onPress={generateScriptFromAI}
-              disabled={isGeneratingScript || recordingState === RecordingState.RECORDING}
+              disabled={isGeneratingScript || audioState.isRecording}
               testID="ai-generate-button"
             >
               {isGeneratingScript ? (
@@ -462,7 +487,7 @@ export function RecordScreen() {
               value={script}
               onChangeText={setScript}
               height={100}
-              disabled={recordingState === RecordingState.RECORDING || isGeneratingScript}
+              disabled={audioState.isRecording || isGeneratingScript}
               helperText="可以根据文稿内容进行录制，也可以自由发挥"
               testID="input-textarea-input"
             />
@@ -473,7 +498,7 @@ export function RecordScreen() {
         <View style={styles.recordingSection}>
           {/* 波形可视化 */}
           <WaveformVisualizer
-            isRecording={recordingState === RecordingState.RECORDING}
+            isRecording={audioState.isRecording && !audioState.isPaused}
             amplitude={amplitude}
           />
 
@@ -484,11 +509,11 @@ export function RecordScreen() {
           <View style={styles.controlsContainer}>{renderRecordingControls()}</View>
 
           {/* 录音状态提示 */}
-          {recordingState !== RecordingState.IDLE && (
+          {(audioState.isRecording || recordingTime > 0) && (
             <Text style={styles.statusText}>
-              {recordingState === RecordingState.RECORDING && '正在录音...'}
-              {recordingState === RecordingState.PAUSED && '录音已暂停'}
-              {recordingState === RecordingState.COMPLETED && '录音完成'}
+              {audioState.isRecording && !audioState.isPaused && '正在录音...'}
+              {audioState.isRecording && audioState.isPaused && '录音已暂停'}
+              {!audioState.isRecording && recordingTime > 0 && '录音完成'}
             </Text>
           )}
         </View>
