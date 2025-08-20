@@ -430,15 +430,17 @@ export function RecordScreen() {
         {/* 文稿信息 */}
         <View style={styles.scriptSection}>
           <View style={styles.titleContainer}>
-            <InputText
-              label="录音标题"
-              placeholder="输入录音标题"
-              value={title}
-              onChangeText={setTitle}
-              disabled={recordingState === RecordingState.RECORDING}
-              style={styles.titleInput}
-              testID="input-text-input"
-            />
+            <View style={styles.titleInputContainer}>
+              <InputText
+                label="录音标题"
+                placeholder="输入录音标题"
+                value={title}
+                onChangeText={setTitle}
+                disabled={recordingState === RecordingState.RECORDING}
+                style={styles.titleInput}
+                testID="input-text-input"
+              />
+            </View>
             <TouchableOpacity
               style={styles.aiButton}
               onPress={generateScriptFromAI}
@@ -557,9 +559,13 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    width: '100%',
+  },
+  titleInputContainer: {
+    flex: 1,
   },
   titleInput: {
-    flex: 1,
+    width: '100%',
   },
   aiButton: {
     width: 40,
@@ -573,6 +579,7 @@ const styles = StyleSheet.create({
   },
   scriptContainer: {
     marginTop: 16,
+    width: '100%',
   },
   recordingSection: {
     alignItems: 'center',
