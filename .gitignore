@@ -80,3 +80,8 @@ yarn-error.log
 .env.development.local
 .env.test.local
 .env.production.local
+
+# CodeBuddy files
+.codebuddy/
+.claude/
+QWEN.md
