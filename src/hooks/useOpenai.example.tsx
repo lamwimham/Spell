@@ -1,25 +1,27 @@
 // OpenAI Hook 使用示例
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useOpenAIChat, useOpenAIChatWithSystemPrompt } from './useOpenai';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
+import { useOpenAIChatWithSystemPrompt } from './useOpenai';
 
 const OpenAIExample = () => {
   const [input, setInput] = useState('');
-  
+
   // 使用通用助手角色的聊天hook
-  const {
-    loading,
-    error,
-    messages,
-    sendMessage,
-    resetConversation,
-    lastAssistantMessage,
-  } = useOpenAIChatWithSystemPrompt('GENERAL_ASSISTANT');
+  const { loading, error, messages, sendMessage, resetConversation } =
+    useOpenAIChatWithSystemPrompt('GENERAL_ASSISTANT');
 
   const handleSend = async () => {
     if (input.trim() === '') return;
-    
+
     try {
       await sendMessage(input, 0);
       setInput('');
@@ -36,14 +38,14 @@ const OpenAIExample = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>OpenAI Chat Example</Text>
-      
+
       <ScrollView style={styles.messagesContainer}>
         {messages.map((message, index) => (
-          <View 
-            key={index} 
+          <View
+            key={index}
             style={[
-              styles.messageBubble, 
-              message.role === 'user' ? styles.userMessage : styles.assistantMessage
+              styles.messageBubble,
+              message.role === 'user' ? styles.userMessage : styles.assistantMessage,
             ]}
           >
             <Text style={styles.messageText}>
@@ -52,21 +54,21 @@ const OpenAIExample = () => {
             </Text>
           </View>
         ))}
-        
+
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#007AFF" />
             <Text style={styles.loadingText}>Thinking...</Text>
           </View>
         )}
-        
+
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>Error: {error}</Text>
           </View>
         )}
       </ScrollView>
-      
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.textInput}

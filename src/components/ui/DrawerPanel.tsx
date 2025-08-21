@@ -147,7 +147,7 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
       },
       onPanResponderGrant: () => {
         // 手势开始时添加反馈
-        translateX.setOffset(translateX._value);
+        translateX.setOffset(0);
         translateX.setValue(0);
       },
       onPanResponderMove: (evt, gestureState) => {
@@ -157,13 +157,10 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
         translateX.setValue(dampedDx);
       },
       onPanResponderRelease: (evt, gestureState) => {
-        translateX.flattenOffset();
-
         // 更灵敏的关闭条件
         const shouldClose =
           gestureState.dx < PAN_RESPONDER_DISTANCE_THRESHOLD ||
-          gestureState.vx < PAN_RESPONDER_VELOCITY_THRESHOLD ||
-          translateX._value < -DRAWER_WIDTH * 0.3;
+          gestureState.vx < PAN_RESPONDER_VELOCITY_THRESHOLD;
 
         if (shouldClose) {
           // 关闭动画更快更明显

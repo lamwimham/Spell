@@ -4,18 +4,37 @@ import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
+import { useRecording } from '../hooks/useRecordings';
+import Recording from '../database/models/Recording';
 
 // 定义路由参数类型
 type RootStackParamList = {
-  Play: { item: { id: string; title: string; duration: string; size: string } };
+  Play: { recording: Recording };
 };
 
 type PlayScreenRouteProp = RouteProp<RootStackParamList, 'Play'>;
 
+// 格式化时间显示
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}m ${secs}s`;
+};
+
+// 格式化文件大小显示
+// const formatFileSize = (bytes: number): string => {
+//   if (bytes < 1024) return `${bytes}b`;
+//   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}kb`;
+//   return `${(bytes / (1024 * 1024)).toFixed(1)}mb`;
+// };
+
 export default function PlayScreen() {
   const navigation = useNavigation();
   const route = useRoute<PlayScreenRouteProp>();
-  const { item } = route.params || { item: { title: '未知音频', duration: '0m 0s', size: '0mb' } };
+  const { recording: recordingParam } = route.params || { recording: null };
+
+  // 使用响应式录音数据
+  const recording = useRecording(recordingParam?.id || null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0.52); // 初始进度值，根据设计图约为52%
@@ -24,6 +43,14 @@ export default function PlayScreen() {
   const togglePlayPause = () => {
     setIsPlaying(!isPlaying);
   };
+
+  // 如果录音不存在，显示默认信息
+  const displayRecording = recording ||
+    recordingParam || {
+      title: '未知音频',
+      duration: 0,
+      playCount: 0,
+    };
 
   return (
     <View style={styles.container}>
@@ -44,7 +71,7 @@ export default function PlayScreen() {
 
       {/* 音频信息 */}
       <View style={styles.audioInfoContainer}>
-        <Text style={styles.audioTitle}>{item.title}</Text>
+        <Text style={styles.audioTitle}>{displayRecording.title}</Text>
 
         <View style={styles.audioMetaContainer}>
           <View style={styles.metaItem}>
@@ -59,9 +86,9 @@ export default function PlayScreen() {
         </View>
 
         <View style={styles.durationContainer}>
-          <Text style={styles.durationText}>{item.duration}</Text>
+          <Text style={styles.durationText}>{formatDuration(displayRecording.duration)}</Text>
           <Text style={styles.durationSeparator}>-</Text>
-          <Text style={styles.durationText}>{item.size}</Text>
+          <Text style={styles.durationText}>{displayRecording.playCount}次播放</Text>
         </View>
       </View>
 

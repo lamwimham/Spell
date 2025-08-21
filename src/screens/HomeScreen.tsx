@@ -16,6 +16,10 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { DrawerPanel } from '../components/ui/DrawerPanel';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
+import { useRecordings, useRecordingActions } from '../hooks/useRecordings';
+import Recording from '../database/models/Recording';
+import { RootStackParamList } from '../types/navigation';
+import { scheduleTestNotification } from '../services/notifications/scheduleManager';
 
 // 启用LayoutAnimation在Android上工作
 if (Platform.OS === 'android') {
@@ -24,45 +28,15 @@ if (Platform.OS === 'android') {
   }
 }
 
-interface VoiceItem {
-  id: string;
-  title: string;
-  duration: string;
-  size: string;
-}
-
-const voiceData: VoiceItem[] = [
-  { id: '1', title: 'loss wight', duration: '13m 24s', size: '3.9mb' },
-  { id: '2', title: 'loss wight', duration: '0m 45s', size: '35kb' },
-  { id: '3', title: 'loss wight', duration: '10m 5s', size: '2.5mb' },
-  { id: '4', title: 'loss wight', duration: '16m 46s', size: '4.7mb' },
-  { id: '5', title: 'loss wight', duration: '00m 00s', size: '00mb' },
-  { id: '6', title: 'no smoking', duration: '24m 10s', size: '4.6mb' },
-];
-
-// 模拟删除API
-const deleteVoiceItems = async (ids: string[]): Promise<boolean> => {
-  // 这里应该是实际的API调用
-  console.log('删除项目:', ids);
-  return new Promise(resolve => {
-    setTimeout(() => resolve(true), 500);
-  });
-};
-
-// 定义导航参数类型
-type RootStackParamList = {
-  Home: undefined;
-  Welcome: undefined;
-  Play: { item: VoiceItem };
-  Timer: undefined;
-};
-
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [isDeleteMode, setIsDeleteMode] = useState(false);
-  const [voiceItems, setVoiceItems] = useState<VoiceItem[]>(voiceData);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+
+  // 获取录音列表和操作方法
+  const recordings = useRecordings();
+  const { deleteRecording } = useRecordingActions();
 
   // 动画值
   const checkboxAnimation = useRef(new Animated.Value(0)).current;
@@ -109,41 +83,41 @@ export default function HomeScreen() {
     if (selectedItems.length === 0) return;
 
     try {
-      const success = await deleteVoiceItems(selectedItems);
-      if (success) {
-        // 从列表中移除已删除项
-        const updatedItems = voiceItems.filter(item => !selectedItems.includes(item.id));
-
-        // 配置布局动画
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
-        // 更新列表数据
-        setVoiceItems(updatedItems);
-
-        // 重置选中项
-        setSelectedItems([]);
-
-        // 退出删除模式
-        setIsDeleteMode(false);
-
-        // 重置动画值
-        checkboxAnimation.setValue(0);
-        deleteButtonAnimation.setValue(0);
-
-        // 显示成功提示
-        Alert.alert('成功', '已删除所选项目');
+      // 删除选中的录音
+      for (const id of selectedItems) {
+        await deleteRecording(id);
       }
+
+      // 重置选中项
+      setSelectedItems([]);
+
+      // 退出删除模式
+      setIsDeleteMode(false);
+
+      // 重置动画值
+      checkboxAnimation.setValue(0);
+      deleteButtonAnimation.setValue(0);
+
+      // 显示成功提示
+      Alert.alert('成功', '已删除所选录音');
     } catch (error) {
       Alert.alert('错误', '删除失败，请重试');
     }
   };
 
-  // 渲染列表项
-  const renderVoiceItem = ({ item }: { item: VoiceItem }) => (
+  // 格式化时间显示
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}m ${secs}s`;
+  };
+
+  // 渲染录音列表项
+  const renderRecordingItem = ({ item }: { item: Recording }) => (
     <TouchableOpacity
-      style={styles.voiceItem}
+      style={styles.recordingItem}
       onPress={() =>
-        isDeleteMode ? toggleSelectItem(item.id) : navigation.navigate('Play', { item })
+        isDeleteMode ? toggleSelectItem(item.id) : navigation.navigate('Play', { recording: item })
       }
       activeOpacity={0.7}
     >
@@ -161,12 +135,12 @@ export default function HomeScreen() {
       <View style={styles.iconContainer}>
         <Icon name="mic" size={32} color="#6B7280" />
       </View>
-      <View style={styles.voiceInfo}>
-        <Text style={styles.voiceTitle}>{item.title}</Text>
-        <View style={styles.voiceMetaContainer}>
-          <Text style={styles.voiceMeta}>{item.duration}</Text>
-          <Text style={styles.voiceMetaSeparator}>-</Text>
-          <Text style={styles.voiceMeta}>{item.size}</Text>
+      <View style={styles.recordingInfo}>
+        <Text style={styles.recordingTitle}>{item.title}</Text>
+        <View style={styles.recordingMetaContainer}>
+          <Text style={styles.recordingMeta}>{formatDuration(item.duration)}</Text>
+          <Text style={styles.recordingMetaSeparator}>-</Text>
+          <Text style={styles.recordingMeta}>{item.playCount}次播放</Text>
         </View>
       </View>
 
@@ -174,13 +148,22 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.playButton}
           onPress={() => {
-            navigation.navigate('Play', { item });
+            navigation.navigate('Play', { recording: item });
           }}
         >
           <Icon name="play" size={24} color="#6B7280" />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
+  );
+
+  // 空状态组件
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Icon name="mic-outline" size={64} color="#C8C5D0" />
+      <Text style={styles.emptyStateTitle}>还没有录音</Text>
+      <Text style={styles.emptyStateSubtitle}>点击下方麦克风按钮开始录制</Text>
+    </View>
   );
 
   return (
@@ -191,11 +174,11 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.backButton} onPress={toggleDeleteMode}>
             <Icon name="close-circle" size={24} color="#FF3B30" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Your library</Text>
+          <Text style={styles.headerTitle}>录音库</Text>
           <TouchableOpacity
             style={styles.deleteButton}
-            onPress={isDeleteMode ? handleDelete : toggleDeleteMode}
-            disabled={isDeleteMode && selectedItems.length === 0}
+            onPress={handleDelete}
+            disabled={selectedItems.length === 0}
           >
             <Animated.View
               style={{
@@ -219,7 +202,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <TopNavigationBar
-          title="Your library"
+          title="录音库"
           showBackButton={true}
           leftIconName="person-circle-outline"
           onLeftIconPress={() => setIsDrawerVisible(true)}
@@ -230,33 +213,34 @@ export default function HomeScreen() {
       )}
 
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Voices Library</Text>
-        <Text style={styles.subtitle}>
-          Voices generated by vocalicious and you've saved will appear here.
-        </Text>
+        <Text style={styles.title}>我的录音</Text>
+        <Text style={styles.subtitle}>您录制的音频文件将显示在这里</Text>
       </View>
 
       <FlatList
-        data={voiceItems}
-        renderItem={renderVoiceItem}
+        data={recordings}
+        renderItem={renderRecordingItem}
         keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={
+          recordings.length === 0 ? styles.emptyContainer : styles.listContainer
+        }
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmptyState}
       />
 
-      {/* FAB按钮 - AudioKit示例 */}
+      {/* FAB按钮 - 测试通知 */}
       <TouchableOpacity
         style={[styles.fabButton, { bottom: 150 }]}
-        onPress={() => navigation.navigate('AudioKitExample' as never)}
+        onPress={scheduleTestNotification}
         activeOpacity={0.8}
       >
-        <Icon name="musical-note" size={28} color="#FFFFFF" />
+        <Icon name="notifications" size={28} color="#FFFFFF" />
       </TouchableOpacity>
 
       {/* FAB按钮 - 录音 */}
       <TouchableOpacity
         style={styles.fabButton}
-        onPress={() => navigation.navigate('Record' as never)}
+        onPress={() => navigation.navigate('Record')}
         activeOpacity={0.8}
       >
         <Icon name="mic" size={28} color="#FFFFFF" />
@@ -339,7 +323,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 40,
   },
-  voiceItem: {
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recordingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
@@ -353,29 +342,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  voiceInfo: {
+  recordingInfo: {
     flex: 1,
     marginLeft: 12,
     height: 46,
     justifyContent: 'center',
   },
-  voiceTitle: {
+  recordingTitle: {
     fontSize: 17,
     fontWeight: '400',
     color: '#393640',
     fontFamily: 'Rubik',
     marginBottom: 5,
   },
-  voiceMetaContainer: {
+  recordingMetaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  voiceMeta: {
+  recordingMeta: {
     fontSize: 15,
     color: '#535059',
     fontFamily: 'Rubik',
   },
-  voiceMetaSeparator: {
+  recordingMetaSeparator: {
     fontSize: 15,
     color: '#D2CED9',
     fontFamily: 'Rubik',
@@ -408,5 +397,22 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 8,
     marginTop: 8,
+  },
+  emptyState: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#393640',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 16,
+    color: '#535059',
+    textAlign: 'center',
   },
 });

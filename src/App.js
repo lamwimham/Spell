@@ -1,20 +1,10 @@
-/**
- * SpellApp - React Native iOS应用
- *
- * @format
- */
-
-import React, { useEffect } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider } from 'react-redux';
-import { store } from './src/store';
-import AppNavigator from './src/navigation/AppNavigator';
-import { DatabaseProvider } from './src/database/DatabaseProvider';
 import notifee, { EventType } from '@notifee/react-native';
-import { initNotifee } from './src/services/notifications/notifeeService';
-import { scheduleAllReminders } from './src/services/notifications/scheduleManager';
+import { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { initNotifee } from './services/notifications/notifeeService';
+import { scheduleAllReminders } from './services/notifications/scheduleManager';
 
-const AppContent = () => {
+export default function App() {
   useEffect(() => {
     async function initApp() {
       await initNotifee(); // 初始化 Notifee
@@ -43,7 +33,7 @@ const AppContent = () => {
     return unsubscribe;
   }, []);
 
-  const handleNotificationPress = (notification: any) => {
+  const handleNotificationPress = notification => {
     const { data } = notification;
     if (data?.type === 'clock_in_reminder') {
       // 跳转到打卡页面（需结合 Navigation）
@@ -52,17 +42,5 @@ const AppContent = () => {
     }
   };
 
-  return <AppNavigator />;
-};
-
-const App = () => (
-  <Provider store={store}>
-    <DatabaseProvider>
-      <SafeAreaProvider>
-        <AppContent />
-      </SafeAreaProvider>
-    </DatabaseProvider>
-  </Provider>
-);
-
-export default App;
+  return <NavigationContainer>{/* 你的页面 */}</NavigationContainer>;
+}

@@ -21,6 +21,8 @@ import useAudioKit from '../hooks/useAudioKit';
 // import { useOpenAIChatWithCustomSystemPrompt } from '../hooks/useQwen';
 import { useOpenAIChatWithCustomSystemPrompt } from '../hooks/useOpenai';
 import { VerticalScriptCarousel } from '../components/ui/VerticalScriptCarousel';
+import { useRecordings, useRecordingActions } from '../hooks/useRecordings';
+import Recording from '../database/models/Recording';
 
 const prompt = `**身份设定**：
 
@@ -74,16 +76,6 @@ type RootStackParamList = {
 };
 
 type RecordScreenRouteProp = RouteProp<RootStackParamList, 'Record'>;
-
-// 录音文件接口
-interface RecordingFile {
-  id: string;
-  title: string;
-  duration: string;
-  size: string;
-  date: string;
-  filePath: string;
-}
 
 // 波形可视化组件
 const WaveformVisualizer: React.FC<{ isRecording: boolean; amplitude: number }> = ({
@@ -142,23 +134,25 @@ const WaveformVisualizer: React.FC<{ isRecording: boolean; amplitude: number }> 
 
 // 录音文件列表项组件
 const RecordingItem: React.FC<{
-  item: RecordingFile;
-  onPlay: (item: RecordingFile) => void;
+  item: Recording;
+  onPlay: (item: Recording) => void;
   onDelete: (id: string) => void;
 }> = ({ item, onPlay, onDelete }) => (
   <View style={styles.recordingItem}>
     <View style={styles.recordingIconContainer}>
-      <Icon name="mic" size={24} color="#7572B7" />
+      <Icon name="mic" size={24} color="#75r72B7" />
     </View>
 
     <View style={styles.recordingInfo}>
       <Text style={styles.recordingTitle}>{item.title}</Text>
       <View style={styles.recordingMeta}>
-        <Text style={styles.recordingMetaText}>{item.duration}</Text>
+        <Text style={styles.recordingMetaText}>{formatDuration(item.duration)}</Text>
         <Text style={styles.recordingMetaSeparator}>-</Text>
-        <Text style={styles.recordingMetaText}>{item.size}</Text>
+        <Text style={styles.recordingMetaText}>{item.playCount}次播放</Text>
         <Text style={styles.recordingMetaSeparator}>-</Text>
-        <Text style={styles.recordingMetaText}>{item.date}</Text>
+        <Text style={styles.recordingMetaText}>
+          {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '未知日期'}
+        </Text>
       </View>
     </View>
 
@@ -173,6 +167,13 @@ const RecordingItem: React.FC<{
     </View>
   </View>
 );
+
+// 格式化时间显示
+const formatDuration = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}m ${secs}s`;
+};
 
 /**
  * 录音页面
@@ -203,30 +204,16 @@ export function RecordScreen() {
     sendMessage: generateScriptWithAI,
   } = useOpenAIChatWithCustomSystemPrompt(prompt);
 
+  // 使用录音Hook
+  const recordings = useRecordings();
+  const { createRecording, deleteRecording } = useRecordingActions();
+
   // 状态管理
   const [recordingTime, setRecordingTime] = useState(0);
   const [amplitude, setAmplitude] = useState(0.5);
   const [title, setTitle] = useState(params.title || '');
   const [script, setScript] = useState(params.script || '');
-  const [recordings, setRecordings] = useState<RecordingFile[]>([
-    // {
-    //   id: '1',
-    //   title: 'Morning Affirmation',
-    //   duration: '2m 30s',
-    //   size: '1.2MB',
-    //   date: '今天',
-    //   filePath: '/path/to/file1.m4a',
-    // },
-    // {
-    //   id: '2',
-    //   title: 'Evening Meditation',
-    //   duration: '5m 15s',
-    //   size: '2.8MB',
-    //   date: '昨天',
-    //   filePath: '/path/to/file2.m4a',
-    // },
-  ]);
-  
+
   // 轮播选择模态框状态
   const [isSelectorModalVisible, setIsSelectorModalVisible] = useState(false);
   const [scriptOptions, setScriptOptions] = useState<{ id: string; content: string }[]>([]);
@@ -298,29 +285,39 @@ export function RecordScreen() {
   };
 
   // 保存录音
-  const saveRecording = () => {
+  const saveRecording = async () => {
     if (!title.trim()) {
       Alert.alert('提示', '请输入录音标题');
       return;
     }
 
-    const newRecording: RecordingFile = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      duration: formatTime(recordingTime),
-      size: `${(recordingTime * 0.05).toFixed(1)}MB`, // 模拟文件大小
-      date: '刚刚',
-      filePath: getRecordingUri() || `/path/to/${Date.now()}.m4a`,
-    };
+    try {
+      const recordingUri = getRecordingUri();
+      if (!recordingUri) {
+        throw new Error('无法获取录音文件路径');
+      }
 
-    setRecordings(prev => [newRecording, ...prev]);
+      // 创建录音记录
+      const result = await createRecording({
+        title: title.trim(),
+        script: script.trim(),
+        url: recordingUri,
+        duration: recordingTime,
+      });
 
-    // 重置状态
-    setRecordingTime(0);
-    setTitle('');
-    setScript('');
+      if (result.success) {
+        // 重置状态
+        setRecordingTime(0);
+        setTitle('');
+        setScript('');
 
-    Alert.alert('成功', '录音已保存');
+        Alert.alert('成功', '录音已保存');
+      } else {
+        throw new Error(result.error || '保存录音失败');
+      }
+    } catch (error: any) {
+      Alert.alert('错误', error.message || '保存录音失败');
+    }
   };
 
   // 取消录音
@@ -346,9 +343,9 @@ export function RecordScreen() {
   };
 
   // 播放录音
-  const playRecording = async (item: RecordingFile) => {
+  const playRecording = async (item: Recording) => {
     try {
-      await startPlaying(item.filePath);
+      await startPlaying(item.url);
       Alert.alert('播放', `正在播放: ${item.title}`);
     } catch (error: any) {
       Alert.alert('错误', error.message || '播放失败');
@@ -356,14 +353,22 @@ export function RecordScreen() {
   };
 
   // 删除录音
-  const deleteRecording = (id: string) => {
+  const handleDeleteRecording = async (id: string) => {
     Alert.alert('确认删除', '确定要删除这个录音吗？', [
       { text: '取消', style: 'cancel' },
       {
         text: '删除',
         style: 'destructive',
-        onPress: () => {
-          setRecordings(prev => prev.filter(item => item.id !== id));
+        onPress: async () => {
+          try {
+            const result = await deleteRecording(id);
+            if (!result.success) {
+              throw new Error(result.error || '删除录音失败');
+            }
+            Alert.alert('成功', '录音已删除');
+          } catch (error: any) {
+            Alert.alert('错误', error.message || '删除录音失败');
+          }
         },
       },
     ]);
@@ -378,7 +383,7 @@ export function RecordScreen() {
     };
   }, []);
 
-    // AI生成脚本文案的函数
+  // AI生成脚本文案的函数
   const generateScriptFromAI = async () => {
     if (!title.trim()) {
       Alert.alert('提示', '请输入录音标题');
@@ -388,7 +393,7 @@ export function RecordScreen() {
     try {
       // 设置重新生成状态
       setIsRegenerating(true);
-      
+
       // 发送请求到Qwen API生成脚本
       const response = await generateScriptWithAI(title, 0);
 
@@ -654,7 +659,7 @@ export function RecordScreen() {
                 key={item.id}
                 item={item}
                 onPlay={playRecording}
-                onDelete={deleteRecording}
+                onDelete={handleDeleteRecording}
               />
             ))
           )}
