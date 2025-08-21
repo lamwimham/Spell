@@ -1,0 +1,15 @@
+{
+  "name": "@spellapp/openapi",
+  "version": "1.0.0",
+  "description": "OpenAPI client for SpellApp",
+  "main": "index.ts",
+  "scripts": {
+    "example": "node example.ts"
+  },
+  "dependencies": {
+    "openai": "^4.0.0"
+  },
+  "keywords": ["openai", "api", "client"],
+  "author": "SpellApp Team",
+  "license": "MIT"
+}

@@ -23,7 +23,7 @@ export class QwenAPI {
     const headers = {
       Authorization: `Bearer ${this.apiKey}`,
       'Content-Type': 'application/json',
-      'X-DashScope-SSE': 'enable',
+      // 'X-DashScope-SSE': 'enable',
     };
 
     try {
@@ -33,12 +33,33 @@ export class QwenAPI {
         body: JSON.stringify(request),
       });
 
+      console.log(response);
       if (!response.ok) {
-        const errorData: QwenError = await response.json();
-        throw new Error(`Qwen API Error: ${errorData.message} (Code: ${errorData.code})`);
+        try {
+          const errorText = await response.text();
+          let errorData: QwenError;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (parseError) {
+            errorData = {
+              message: errorText || response.statusText,
+              code: response.status.toString(),
+              request_id: '',
+            };
+          }
+          throw new Error(`Qwen API Error: ${errorData.message} (Code: ${errorData.code})`);
+        } catch (parseError) {
+          throw new Error(`Qwen API Error: ${response.statusText} (Status: ${response.status})`);
+        }
       }
 
-      const data: QwenChatResponse = await response.json();
+      const responseText = await response.text();
+      let data: QwenChatResponse;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error('Invalid JSON response from Qwen API');
+      }
       return data;
     } catch (error) {
       if (error instanceof Error) {

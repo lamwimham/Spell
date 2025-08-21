@@ -18,8 +18,52 @@ import { InputTextarea } from '../components/ui/InputTextarea';
 import { Button } from '../components/ui/Button';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 import useAudioKit from '../hooks/useAudioKit';
-import { useQwenChatWithCustomSystemPrompt } from '../hooks/useQwen';
+// import { useOpenAIChatWithCustomSystemPrompt } from '../hooks/useQwen';
+import { useOpenAIChatWithCustomSystemPrompt } from '../hooks/useOpenai';
+import { VerticalScriptCarousel } from '../components/ui/VerticalScriptCarousel';
 
+const prompt = `**身份设定**：
+
+您是一名专业心理学家，结合身份声明理论（identity statement）、神经可塑性研究成果，以及相关实践细节，帮助用户通过潜意识重塑来养成好习惯或戒除坏习惯。
+
+**任务说明**：
+
+用户会给出一个目标（例如想要养成某个好习惯，或戒除某个坏习惯）。基于该目标，请您生成 **10 句独立、简洁、目标一致的句子**。这些句子将作为用户的“潜意识锚点”，通过反复朗读来强化新习惯或消除坏习惯。
+
+**句子结构要求**：
+
+- 每句长度：5 - 10 秒内可读完。
+- 每句保持简单、口语化。
+- 遵循“熟悉优先”原则，让句子更易被潜意识接受。
+- 每句分为两部分：
+    - **A 部分** = 身份声明（Identity Statement），必须是具体的行动聚焦身份。
+    - **B 部分** = 情绪与价值触发，带有强烈的情绪标签（喜悦、自由、厌恶、自豪等），并能引发普遍共鸣。
+- 句子统一格式：
+    - **养成习惯目标**：\`我是XXXXX（A部分），因为XXXXXX（B部分）\`
+    - **戒除坏习惯目标**：也可改为 \`我从不XXXXX（A部分），因为XXXXXX（B部分）\`
+
+**数量与分层**：
+
+- 10 句总共，其中：
+    - **5 句基础要求**：A 部分为身份声明 + B 部分为情绪标签
+    - **5 句进阶要求**：
+        - 戒除目标可采用“我从不…”形式
+        - B 部分包含价值取向共鸣（自由、健康、尊严、家庭、成长、独立、幸福等）
+
+**输出限制**：
+
+- 只输出最终的 10 句句子，不要解释，不要额外说明。
+
+**参考示例**：
+
+输入示例: 
+我希望戒烟
+
+输出JSON示例:
+{
+"input": "我希望戒烟",
+"output":["我从来不抽烟，因为烟很臭","我从来不抽烟，因为我讨厌被剥削的感觉"]
+}`;
 // 定义路由参数类型
 type RootStackParamList = {
   Record: {
@@ -157,9 +201,7 @@ export function RecordScreen() {
     loading: isGeneratingScript,
     error: scriptGenerationError,
     sendMessage: generateScriptWithAI,
-  } = useQwenChatWithCustomSystemPrompt(
-    '你是一个专业的语音内容创作助手。根据用户提供的标题，生成一段适合录音的详细脚本文案。文案应该结构清晰，包含引言、主体内容和结尾总结三个部分。语言要自然流畅，适合口语表达。',
-  );
+  } = useOpenAIChatWithCustomSystemPrompt(prompt);
 
   // 状态管理
   const [recordingTime, setRecordingTime] = useState(0);
@@ -167,23 +209,28 @@ export function RecordScreen() {
   const [title, setTitle] = useState(params.title || '');
   const [script, setScript] = useState(params.script || '');
   const [recordings, setRecordings] = useState<RecordingFile[]>([
-    {
-      id: '1',
-      title: 'Morning Affirmation',
-      duration: '2m 30s',
-      size: '1.2MB',
-      date: '今天',
-      filePath: '/path/to/file1.m4a',
-    },
-    {
-      id: '2',
-      title: 'Evening Meditation',
-      duration: '5m 15s',
-      size: '2.8MB',
-      date: '昨天',
-      filePath: '/path/to/file2.m4a',
-    },
+    // {
+    //   id: '1',
+    //   title: 'Morning Affirmation',
+    //   duration: '2m 30s',
+    //   size: '1.2MB',
+    //   date: '今天',
+    //   filePath: '/path/to/file1.m4a',
+    // },
+    // {
+    //   id: '2',
+    //   title: 'Evening Meditation',
+    //   duration: '5m 15s',
+    //   size: '2.8MB',
+    //   date: '昨天',
+    //   filePath: '/path/to/file2.m4a',
+    // },
   ]);
+  
+  // 轮播选择模态框状态
+  const [isSelectorModalVisible, setIsSelectorModalVisible] = useState(false);
+  const [scriptOptions, setScriptOptions] = useState<{ id: string; content: string }[]>([]);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   // 计时器引用
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -331,7 +378,7 @@ export function RecordScreen() {
     };
   }, []);
 
-  // AI生成脚本文案的函数
+    // AI生成脚本文案的函数
   const generateScriptFromAI = async () => {
     if (!title.trim()) {
       Alert.alert('提示', '请输入录音标题');
@@ -339,19 +386,98 @@ export function RecordScreen() {
     }
 
     try {
+      // 设置重新生成状态
+      setIsRegenerating(true);
+      
       // 发送请求到Qwen API生成脚本
-      const response = await generateScriptWithAI(
-        `请为"${title}"这个主题生成一段详细的录音脚本文案。要求：1. 结构清晰，包含引言、主体内容和结尾总结三个部分；2. 语言自然流畅，适合口语表达；3. 内容充实有深度，时长大约3-5分钟；4. 不要使用markdown格式，直接输出纯文本。`,
-      );
+      const response = await generateScriptWithAI(title, 0);
 
-      // 更新脚本文案
-      setScript(response.response);
+      // 解析AI返回的脚本选项
+      let scripts: string[] = [];
 
-      Alert.alert('成功', 'AI已为您生成脚本文案');
+      try {
+        // 尝试解析JSON格式的响应
+        const trimmedResponse = response.response.trim();
+
+        // 检查是否为JSON格式
+        if (
+          (trimmedResponse.startsWith('{') && trimmedResponse.endsWith('}')) ||
+          (trimmedResponse.startsWith('[') && trimmedResponse.endsWith(']'))
+        ) {
+          const jsonResponse = JSON.parse(trimmedResponse);
+
+          // 处理您提供的格式: { "input": "...", "output": [...] }
+          if (jsonResponse.output && Array.isArray(jsonResponse.output)) {
+            scripts = jsonResponse.output.filter(
+              (item: any) => typeof item === 'string' && item.trim() !== '',
+            );
+          }
+          // 处理数组格式
+          else if (Array.isArray(jsonResponse)) {
+            scripts = jsonResponse.filter(
+              (item: any) => typeof item === 'string' && item.trim() !== '',
+            );
+          }
+          // 处理其他对象格式
+          else if (typeof jsonResponse === 'object' && jsonResponse.content) {
+            scripts = [jsonResponse.content];
+          }
+        }
+      } catch (jsonError) {
+        // JSON解析失败，使用备用解析方法
+        console.log('JSON parsing failed, using fallback parsing');
+      }
+
+      // 如果JSON解析没有得到结果，使用备用方法
+      if (scripts.length === 0) {
+        // 尝试按行分割
+        const lines = response.response.split('\n').filter(line => line.trim() !== '');
+        if (lines.length > 1) {
+          scripts = lines;
+        } else {
+          // 尝试按句号分割
+          const sentences = response.response
+            .split(/(?<=[.。!！?？])\s+/)
+            .filter(s => s.trim() !== '');
+          if (sentences.length > 1) {
+            scripts = sentences.slice(0, Math.min(10, sentences.length)); // 最多取10个选项
+          } else {
+            // 最后回退到完整响应
+            scripts = [response.response];
+          }
+        }
+      }
+
+      // 过滤掉空的脚本
+      scripts = scripts.filter(script => script.trim() !== '');
+
+      // 如果有多个脚本选项，显示轮播选择模态框
+      if (scripts.length > 1) {
+        const options = scripts.map((script, index) => ({
+          id: `script-${index}`,
+          content: script.trim(),
+        }));
+
+        setScriptOptions(options);
+        setIsSelectorModalVisible(true);
+      } else {
+        // 如果只有一个脚本选项，直接使用
+        setScript(scripts[0] ? scripts[0].trim() : '');
+        Alert.alert('成功', 'AI已为您生成脚本文案');
+      }
     } catch (error: any) {
       console.error('AI生成脚本失败:', error);
       Alert.alert('错误', scriptGenerationError || '生成脚本失败，请稍后重试');
+    } finally {
+      // 重置重新生成状态
+      setIsRegenerating(false);
     }
+  };
+
+  // 处理轮盘选择的脚本
+  const handleScriptSelection = (selectedScript: string) => {
+    setScript(selectedScript);
+    // Alert.alert('成功', '已选择文稿');
   };
 
   // 渲染录音控制按钮
@@ -534,6 +660,16 @@ export function RecordScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* 脚本选择垂直轮播模态框 */}
+      <VerticalScriptCarousel
+        visible={isSelectorModalVisible}
+        onClose={() => setIsSelectorModalVisible(false)}
+        onSelect={handleScriptSelection}
+        onRegenerate={generateScriptFromAI}
+        options={scriptOptions}
+        isRegenerating={isRegenerating}
+      />
     </View>
   );
 }
