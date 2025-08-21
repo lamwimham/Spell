@@ -10,7 +10,7 @@ const API_KEY = 'your-api-key'; // 请替换为您的实际 API 密钥
 const client = new OpenAPIClient(
   API_KEY,
   'https://api.openai.com/v1', // 可选，替换为您的基础 URL
-  'gpt-3.5-turbo' // 可选，替换为您的默认模型
+  'gpt-3.5-turbo', // 可选，替换为您的默认模型
 );
 
 // 示例：发送聊天完成请求

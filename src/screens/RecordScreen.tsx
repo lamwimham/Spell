@@ -132,7 +132,7 @@ const WaveformVisualizer: React.FC<{ isRecording: boolean; amplitude: number }> 
   );
 };
 
-// 录音文件列表项组件
+// 咒语文件列表项组件
 const RecordingItem: React.FC<{
   item: Recording;
   onPlay: (item: Recording) => void;
@@ -176,8 +176,8 @@ const formatDuration = (seconds: number): string => {
 };
 
 /**
- * 录音页面
- * 基于现有UI风格设计的录音功能页面
+ * 咒语页面
+ * 基于现有UI风格设计的咒语功能页面
  */
 export function RecordScreen() {
   const navigation = useNavigation();
@@ -204,7 +204,7 @@ export function RecordScreen() {
     sendMessage: generateScriptWithAI,
   } = useOpenAIChatWithCustomSystemPrompt(prompt);
 
-  // 使用录音Hook
+  // 使用咒语Hook
   const recordings = useRecordings();
   const { createRecording, deleteRecording } = useRecordingActions();
 
@@ -222,14 +222,14 @@ export function RecordScreen() {
   // 计时器引用
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 格式化录音时间
+  // 格式化咒语时间
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 开始录音
+  // 开始咒语
   const handleStartRecording = async () => {
     try {
       await startRecording();
@@ -241,11 +241,11 @@ export function RecordScreen() {
         setAmplitude(Math.random() * 0.8 + 0.2); // 模拟音频振幅
       }, 1000);
     } catch (error: any) {
-      Alert.alert('错误', error.message || '无法开始录音，请检查麦克风权限');
+      Alert.alert('错误', error.message || '无法开始咒语，请检查麦克风权限');
     }
   };
 
-  // 暂停录音
+  // 暂停咒语
   const handlePauseRecording = async () => {
     try {
       await pauseRecording();
@@ -253,11 +253,11 @@ export function RecordScreen() {
         clearInterval(timerRef.current);
       }
     } catch (error: any) {
-      Alert.alert('错误', error.message || '暂停录音失败');
+      Alert.alert('错误', error.message || '暂停咒语失败');
     }
   };
 
-  // 继续录音
+  // 继续咒语
   const handleResumeRecording = async () => {
     try {
       await resumeRecording();
@@ -267,11 +267,11 @@ export function RecordScreen() {
         setAmplitude(Math.random() * 0.8 + 0.2);
       }, 1000);
     } catch (error: any) {
-      Alert.alert('错误', error.message || '继续录音失败');
+      Alert.alert('错误', error.message || '继续咒语失败');
     }
   };
 
-  // 停止录音
+  // 停止咒语
   const handleStopRecording = async () => {
     try {
       await stopRecording();
@@ -280,24 +280,24 @@ export function RecordScreen() {
       }
       setAmplitude(0);
     } catch (error: any) {
-      Alert.alert('错误', error.message || '停止录音失败');
+      Alert.alert('错误', error.message || '停止咒语失败');
     }
   };
 
-  // 保存录音
+  // 保存咒语
   const saveRecording = async () => {
     if (!title.trim()) {
-      Alert.alert('提示', '请输入录音标题');
+      Alert.alert('提示', '请输入咒语标题');
       return;
     }
 
     try {
       const recordingUri = getRecordingUri();
       if (!recordingUri) {
-        throw new Error('无法获取录音文件路径');
+        throw new Error('无法获取咒语文件路径');
       }
 
-      // 创建录音记录
+      // 创建咒语记录
       const result = await createRecording({
         title: title.trim(),
         script: script.trim(),
@@ -311,19 +311,19 @@ export function RecordScreen() {
         setTitle('');
         setScript('');
 
-        Alert.alert('成功', '录音已保存');
+        Alert.alert('成功', '咒语已保存');
       } else {
-        throw new Error(result.error || '保存录音失败');
+        throw new Error(result.error || '保存咒语失败');
       }
     } catch (error: any) {
-      Alert.alert('错误', error.message || '保存录音失败');
+      Alert.alert('错误', error.message || '保存咒语失败');
     }
   };
 
-  // 取消录音
+  // 取消咒语
   const cancelRecording = () => {
-    Alert.alert('确认取消', '确定要取消当前录音吗？录音内容将丢失。', [
-      { text: '继续录音', style: 'cancel' },
+    Alert.alert('确认取消', '确定要取消当前咒语吗？咒语内容将丢失。', [
+      { text: '继续咒语', style: 'cancel' },
       {
         text: '确定取消',
         style: 'destructive',
@@ -335,14 +335,14 @@ export function RecordScreen() {
               clearInterval(timerRef.current);
             }
           } catch (error: any) {
-            Alert.alert('错误', error.message || '取消录音失败');
+            Alert.alert('错误', error.message || '取消咒语失败');
           }
         },
       },
     ]);
   };
 
-  // 播放录音
+  // 播放咒语
   const playRecording = async (item: Recording) => {
     try {
       await startPlaying(item.url);
@@ -352,9 +352,9 @@ export function RecordScreen() {
     }
   };
 
-  // 删除录音
+  // 删除咒语
   const handleDeleteRecording = async (id: string) => {
-    Alert.alert('确认删除', '确定要删除这个录音吗？', [
+    Alert.alert('确认删除', '确定要删除这个咒语吗？', [
       { text: '取消', style: 'cancel' },
       {
         text: '删除',
@@ -363,11 +363,11 @@ export function RecordScreen() {
           try {
             const result = await deleteRecording(id);
             if (!result.success) {
-              throw new Error(result.error || '删除录音失败');
+              throw new Error(result.error || '删除咒语失败');
             }
-            Alert.alert('成功', '录音已删除');
+            Alert.alert('成功', '咒语已删除');
           } catch (error: any) {
-            Alert.alert('错误', error.message || '删除录音失败');
+            Alert.alert('错误', error.message || '删除咒语失败');
           }
         },
       },
@@ -386,7 +386,7 @@ export function RecordScreen() {
   // AI生成脚本文案的函数
   const generateScriptFromAI = async () => {
     if (!title.trim()) {
-      Alert.alert('提示', '请输入录音标题');
+      Alert.alert('提示', '请输入咒语标题');
       return;
     }
 
@@ -485,7 +485,7 @@ export function RecordScreen() {
     // Alert.alert('成功', '已选择文稿');
   };
 
-  // 渲染录音控制按钮
+  // 渲染咒语控制按钮
   const renderRecordingControls = () => {
     if (audioState.isRecording && !audioState.isPaused) {
       return (
@@ -540,14 +540,14 @@ export function RecordScreen() {
                 await resetRecording();
                 setRecordingTime(0);
               } catch (error: any) {
-                Alert.alert('错误', error.message || '重置录音失败');
+                Alert.alert('错误', error.message || '重置咒语失败');
               }
             }}
             style={styles.completedButton}
           />
 
           <Button
-            label="保存录音"
+            label="保存咒语"
             variant="primary"
             onPress={saveRecording}
             style={styles.completedButton}
@@ -572,7 +572,7 @@ export function RecordScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <TopNavigationBar
-        title="录音"
+        title="咒语"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
       />
@@ -583,8 +583,8 @@ export function RecordScreen() {
           <View style={styles.titleContainer}>
             <View style={styles.titleInputContainer}>
               <InputText
-                label="录音标题"
-                placeholder="输入录音标题"
+                label="咒语标题"
+                placeholder="输入咒语标题"
                 value={title}
                 onChangeText={setTitle}
                 disabled={audioState.isRecording}
@@ -620,7 +620,7 @@ export function RecordScreen() {
           </View>
         </View>
 
-        {/* 录音控制区域 */}
+        {/* 咒语控制区域 */}
         <View style={styles.recordingSection}>
           {/* 波形可视化 */}
           <WaveformVisualizer
@@ -628,30 +628,30 @@ export function RecordScreen() {
             amplitude={amplitude}
           />
 
-          {/* 录音时间 */}
+          {/* 咒语时间 */}
           <Text style={styles.recordingTime}>{formatTime(recordingTime)}</Text>
 
-          {/* 录音控制按钮 */}
+          {/* 咒语控制按钮 */}
           <View style={styles.controlsContainer}>{renderRecordingControls()}</View>
 
-          {/* 录音状态提示 */}
+          {/* 咒语状态提示 */}
           {(audioState.isRecording || recordingTime > 0) && (
             <Text style={styles.statusText}>
-              {audioState.isRecording && !audioState.isPaused && '正在录音...'}
-              {audioState.isRecording && audioState.isPaused && '录音已暂停'}
-              {!audioState.isRecording && recordingTime > 0 && '录音完成'}
+              {audioState.isRecording && !audioState.isPaused && '正在咒语...'}
+              {audioState.isRecording && audioState.isPaused && '咒语已暂停'}
+              {!audioState.isRecording && recordingTime > 0 && '咒语完成'}
             </Text>
           )}
         </View>
 
-        {/* 录音文件列表 */}
+        {/* 咒语文件列表 */}
         <View style={styles.recordingsSection}>
-          <Text style={styles.sectionTitle}>录音文件</Text>
+          <Text style={styles.sectionTitle}>咒语文件</Text>
 
           {recordings.length === 0 ? (
             <View style={styles.emptyState}>
               <Icon name="mic-outline" size={48} color="#C8C5D0" />
-              <Text style={styles.emptyStateText}>暂无录音文件</Text>
+              <Text style={styles.emptyStateText}>暂无咒语文件</Text>
             </View>
           ) : (
             recordings.map(item => (

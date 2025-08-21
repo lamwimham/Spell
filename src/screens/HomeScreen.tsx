@@ -34,7 +34,7 @@ export default function HomeScreen() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
 
-  // 获取录音列表和操作方法
+  // 获取咒语列表和操作方法
   const recordings = useRecordings();
   const { deleteRecording } = useRecordingActions();
 
@@ -83,7 +83,7 @@ export default function HomeScreen() {
     if (selectedItems.length === 0) return;
 
     try {
-      // 删除选中的录音
+      // 删除选中的咒语
       for (const id of selectedItems) {
         await deleteRecording(id);
       }
@@ -99,7 +99,7 @@ export default function HomeScreen() {
       deleteButtonAnimation.setValue(0);
 
       // 显示成功提示
-      Alert.alert('成功', '已删除所选录音');
+      Alert.alert('成功', '已删除所选咒语');
     } catch (error) {
       Alert.alert('错误', '删除失败，请重试');
     }
@@ -112,7 +112,7 @@ export default function HomeScreen() {
     return `${mins}m ${secs}s`;
   };
 
-  // 渲染录音列表项
+  // 渲染咒语列表项
   const renderRecordingItem = ({ item }: { item: Recording }) => (
     <TouchableOpacity
       style={styles.recordingItem}
@@ -161,7 +161,7 @@ export default function HomeScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Icon name="mic-outline" size={64} color="#C8C5D0" />
-      <Text style={styles.emptyStateTitle}>还没有录音</Text>
+      <Text style={styles.emptyStateTitle}>还没有咒语</Text>
       <Text style={styles.emptyStateSubtitle}>点击下方麦克风按钮开始录制</Text>
     </View>
   );
@@ -174,7 +174,7 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.backButton} onPress={toggleDeleteMode}>
             <Icon name="close-circle" size={24} color="#FF3B30" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>录音库</Text>
+          <Text style={styles.headerTitle}>咒语库</Text>
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={handleDelete}
@@ -202,7 +202,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <TopNavigationBar
-          title="录音库"
+          title="咒语库"
           showBackButton={true}
           leftIconName="person-circle-outline"
           onLeftIconPress={() => setIsDrawerVisible(true)}
@@ -213,7 +213,7 @@ export default function HomeScreen() {
       )}
 
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>我的录音</Text>
+        <Text style={styles.title}>我的咒语</Text>
         <Text style={styles.subtitle}>您录制的音频文件将显示在这里</Text>
       </View>
 
@@ -237,7 +237,7 @@ export default function HomeScreen() {
         <Icon name="notifications" size={28} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* FAB按钮 - 录音 */}
+      {/* FAB按钮 - 咒语 */}
       <TouchableOpacity
         style={styles.fabButton}
         onPress={() => navigation.navigate('Record')}

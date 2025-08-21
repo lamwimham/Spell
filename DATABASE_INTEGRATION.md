@@ -1,8 +1,8 @@
-# WatermelonDB 录音功能集成说明
+# WatermelonDB 咒语功能集成说明
 
 ## 功能概述
 
-本项目集成了 WatermelonDB 作为本地数据库，用于存储和管理录音信息。通过响应式特性，实现了录音的增删改查操作，并确保 UI 能够实时更新。
+本项目集成了 WatermelonDB 作为本地数据库，用于存储和管理咒语信息。通过响应式特性，实现了咒语的增删改查操作，并确保 UI 能够实时更新。
 
 ## 核心组件
 
@@ -10,12 +10,12 @@
 
 - 位置: `src/database/models/Recording.js`
 - 字段:
-  - `title`: 录音标题
-  - `script`: 录音脚本内容
-  - `url`: 录音文件路径
-  - `duration`: 录音时长(秒)
+  - `title`: 咒语标题
+  - `script`: 咒语脚本内容
+  - `url`: 咒语文件路径
+  - `duration`: 咒语时长(秒)
   - `playCount`: 播放次数
-  - `recordingTime`: 录音时间戳
+  - `recordingTime`: 咒语时间戳
   - `createdAt`: 创建时间
   - `updatedAt`: 更新时间
 
@@ -23,31 +23,31 @@
 
 - 位置: `src/database/repositories/RecordingRepository.ts`
 - 提供方法:
-  - `create()`: 创建录音记录
-  - `getAll()`: 获取所有录音(静态查询)
-  - `getById()`: 根据 ID 获取录音(静态查询)
-  - `update()`: 更新录音信息
-  - `delete()`: 删除录音
+  - `create()`: 创建咒语记录
+  - `getAll()`: 获取所有咒语(静态查询)
+  - `getById()`: 根据 ID 获取咒语(静态查询)
+  - `update()`: 更新咒语信息
+  - `delete()`: 删除咒语
   - `incrementPlayCount()`: 增加播放次数
-  - `observeAll()`: 观察所有录音(响应式查询)
-  - `observeById()`: 观察单个录音(响应式查询)
-  - `observeWithQuery()`: 条件观察录音(响应式查询)
-  - `getCount()`: 获取录音总数(静态查询)
-  - `observeCount()`: 观察录音总数(响应式查询)
+  - `observeAll()`: 观察所有咒语(响应式查询)
+  - `observeById()`: 观察单个咒语(响应式查询)
+  - `observeWithQuery()`: 条件观察咒语(响应式查询)
+  - `getCount()`: 获取咒语总数(静态查询)
+  - `observeCount()`: 观察咒语总数(响应式查询)
 
 ### 3. 业务逻辑层 (React Hooks)
 
 - 位置: `src/hooks/useRecordings.ts`
 - 提供 Hooks:
-  - `useRecordings()`: 获取所有录音列表
-  - `useRecordingsQuery()`: 条件查询录音列表
-  - `useRecording()`: 获取单个录音详情
-  - `useRecordingsCount()`: 获取录音总数
-  - `useRecordingActions()`: 录音操作方法集合
+  - `useRecordings()`: 获取所有咒语列表
+  - `useRecordingsQuery()`: 条件查询咒语列表
+  - `useRecording()`: 获取单个咒语详情
+  - `useRecordingsCount()`: 获取咒语总数
+  - `useRecordingActions()`: 咒语操作方法集合
 
 ## 使用示例
 
-### 在组件中使用响应式录音列表:
+### 在组件中使用响应式咒语列表:
 
 ```typescript
 import { useRecordings } from '../hooks/useRecordings';
@@ -65,7 +65,7 @@ const RecordingList = () => {
 };
 ```
 
-### 创建新录音:
+### 创建新咒语:
 
 ```typescript
 import { useRecordingActions } from '../hooks/useRecordings';
@@ -81,13 +81,13 @@ const RecordingForm = () => {
     });
 
     if (result.success) {
-      console.log('录音保存成功');
+      console.log('咒语保存成功');
     }
   };
 };
 ```
 
-### 删除录音:
+### 删除咒语:
 
 ```typescript
 import { useRecordingActions } from '../hooks/useRecordings';
@@ -98,7 +98,7 @@ const RecordingItem = ({ recordingId }) => {
   const handleDelete = async () => {
     const result = await deleteRecording(recordingId);
     if (result.success) {
-      console.log('录音删除成功');
+      console.log('咒语删除成功');
     }
   };
 };
@@ -108,7 +108,7 @@ const RecordingItem = ({ recordingId }) => {
 
 通过使用 WatermelonDB 的 `observe()` 方法和 React 的 `useObservable` Hook，实现了数据的响应式更新：
 
-1. 当数据库中的录音数据发生变化时，所有订阅了该数据的组件会自动重新渲染
+1. 当数据库中的咒语数据发生变化时，所有订阅了该数据的组件会自动重新渲染
 2. 无需手动刷新或重新查询数据
 3. 提供了更好的用户体验和性能优化
 

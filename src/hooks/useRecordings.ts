@@ -8,8 +8,8 @@ import {
 import Recording from '../database/models/Recording';
 
 /**
- * 使用所有录音列表的Hook
- * 提供响应式的录音列表，会自动更新当数据库变化时
+ * 使用所有咒语列表的Hook
+ * 提供响应式的咒语列表，会自动更新当数据库变化时
  */
 export const useRecordings = () => {
   const database = useDatabase();
@@ -31,7 +31,7 @@ export const useRecordings = () => {
 };
 
 /**
- * 使用带条件查询的录音列表Hook
+ * 使用带条件查询的咒语列表Hook
  * @param query 查询条件
  */
 export const useRecordingsQuery = (query: RecordingQuery) => {
@@ -54,8 +54,8 @@ export const useRecordingsQuery = (query: RecordingQuery) => {
 };
 
 /**
- * 使用单个录音详情的Hook
- * @param id 录音ID
+ * 使用单个咒语详情的Hook
+ * @param id 咒语ID
  */
 export const useRecording = (id: string | null) => {
   const database = useDatabase();
@@ -82,7 +82,7 @@ export const useRecording = (id: string | null) => {
 };
 
 /**
- * 使用录音总数的Hook
+ * 使用咒语总数的Hook
  */
 export const useRecordingsCount = () => {
   const database = useDatabase();
@@ -102,41 +102,41 @@ export const useRecordingsCount = () => {
 };
 
 /**
- * 录音操作Hook
+ * 咒语操作Hook
  * 提供创建、更新、删除等操作方法
  */
 export const useRecordingActions = () => {
   // const database = useDatabase();
 
-  // 创建录音
+  // 创建咒语
   const createRecording = async (data: RecordingData) => {
     try {
       const recording = await RecordingRepository.create(data);
       return { success: true, data: recording };
     } catch (error: any) {
-      console.error('创建录音失败:', error);
+      console.error('创建咒语失败:', error);
       return { success: false, error: error.message };
     }
   };
 
-  // 更新录音
+  // 更新咒语
   const updateRecording = async (id: string, data: Partial<RecordingData>) => {
     try {
       await RecordingRepository.update(id, data);
       return { success: true };
     } catch (error: any) {
-      console.error('更新录音失败:', error);
+      console.error('更新咒语失败:', error);
       return { success: false, error: error.message };
     }
   };
 
-  // 删除录音
+  // 删除咒语
   const deleteRecording = async (id: string) => {
     try {
       await RecordingRepository.delete(id);
       return { success: true };
     } catch (error: any) {
-      console.error('删除录音失败:', error);
+      console.error('删除咒语失败:', error);
       return { success: false, error: error.message };
     }
   };

@@ -185,13 +185,13 @@ describe('useAudioKit', () => {
     // Test starting recording when already recording
     await act(async () => {
       await result.current.startRecording();
-      await expect(result.current.startRecording()).rejects.toThrow('已经在录音中');
+      await expect(result.current.startRecording()).rejects.toThrow('已经在咒语中');
     });
 
     // Test stopping recording when not recording
     await act(async () => {
       await result.current.stopRecording();
-      await expect(result.current.stopRecording()).rejects.toThrow('当前没有在录音');
+      await expect(result.current.stopRecording()).rejects.toThrow('当前没有在咒语');
     });
   });
 });

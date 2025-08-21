@@ -247,7 +247,7 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{userStats.totalRecordings}</Text>
-              <Text style={styles.statLabel}>录音数</Text>
+              <Text style={styles.statLabel}>咒语数</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{userStats.totalListeningTime}</Text>
@@ -279,7 +279,7 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
                 </View>
                 <Text style={styles.checkInDetails}>
                   {record.completed
-                    ? `${record.recordings}录音 ${record.listeningTime}分钟`
+                    ? `${record.recordings}咒语 ${record.listeningTime}分钟`
                     : '未完成'}
                 </Text>
               </View>

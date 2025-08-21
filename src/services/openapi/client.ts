@@ -6,27 +6,26 @@ import {
   OPENAPI_DEFAULT_MODEL,
   OPENAPI_DEFAULT_PARAMETERS,
 } from './config';
-import {
-  OpenAIChatRequest,
-  OpenAIChatResponse,
-  OpenAIMessage,
-} from './types';
+import { OpenAIChatRequest, OpenAIChatResponse, OpenAIMessage } from './types';
 
 export class OpenAPIClient {
   private client: OpenAI;
   private defaultModel: string;
   private baseUrl: string;
 
-  constructor(apiKey: string, baseUrl: string = OPENAPI_DEFAULT_BASE_URL, defaultModel: string = OPENAPI_DEFAULT_MODEL) {
+  constructor(
+    apiKey: string,
+    baseUrl: string = OPENAPI_DEFAULT_BASE_URL,
+    defaultModel: string = OPENAPI_DEFAULT_MODEL,
+  ) {
     // console.log('实例化openai', apiKey, baseUrl, defaultModel)
     this.client = new OpenAI({
       apiKey,
-      baseURL: baseUrl
+      baseURL: baseUrl,
     });
     this.baseUrl = baseUrl;
     this.defaultModel = defaultModel;
   }
-  
 
   /**
    * 发送聊天完成请求
@@ -38,14 +37,14 @@ export class OpenAPIClient {
   async chatCompletion(
     messages: OpenAIMessage[],
     model: string = this.defaultModel,
-    options: Partial<Omit<OpenAIChatRequest, 'messages' | 'model'>> = {}
+    options: Partial<Omit<OpenAIChatRequest, 'messages' | 'model'>> = {},
   ): Promise<OpenAIChatResponse> {
     try {
       const request: OpenAIChatRequest = {
         model,
         messages,
         response_format: {
-          'type': 'json_object'
+          type: 'json_object',
         },
         ...OPENAPI_DEFAULT_PARAMETERS,
         ...options,
@@ -73,7 +72,7 @@ export class OpenAPIClient {
   async *streamChatCompletion(
     messages: OpenAIMessage[],
     model: string = this.defaultModel,
-    options: Partial<Omit<OpenAIChatRequest, 'messages' | 'model'>> = {}
+    options: Partial<Omit<OpenAIChatRequest, 'messages' | 'model'>> = {},
   ): AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> {
     try {
       const request: OpenAIChatRequest = {
@@ -85,10 +84,11 @@ export class OpenAPIClient {
       };
 
       const response = await this.client.chat.completions.create(request);
-      
+
       // 使用类型断言确保TypeScript知道这是一个可迭代对象
-      const stream = response as unknown as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>;
-      
+      const stream =
+        response as unknown as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>;
+
       // 直接迭代流
       for await (const chunk of stream) {
         yield chunk;

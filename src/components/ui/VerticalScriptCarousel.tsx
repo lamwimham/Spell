@@ -60,12 +60,7 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
     const isSelected = selectedId === item.id;
 
     return (
-      <View
-        style={[
-          styles.itemContainer,
-          isSelected && styles.selectedItem,
-        ]}
-      >
+      <View style={[styles.itemContainer, isSelected && styles.selectedItem]}>
         <TouchableOpacity
           style={styles.itemContent}
           onLongPress={() => handleLongPress(item.id)}
@@ -81,12 +76,7 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
@@ -95,12 +85,10 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
               <Icon name="close" size={24} color="#393640" />
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.content}>
-            <Text style={styles.instructionText}>
-              长按选择文稿，或滑动浏览选项
-            </Text>
-            
+            <Text style={styles.instructionText}>长按选择文稿，或滑动浏览选项</Text>
+
             <View style={styles.carouselContainer}>
               <FlatList
                 data={options}
@@ -113,10 +101,10 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
               />
             </View>
           </View>
-          
+
           <View style={styles.footer}>
-            <TouchableOpacity 
-              style={styles.regenerateButton} 
+            <TouchableOpacity
+              style={styles.regenerateButton}
               onPress={onRegenerate}
               disabled={isRegenerating}
             >
@@ -126,8 +114,8 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
                 <Text style={styles.regenerateButtonText}>重新生成</Text>
               )}
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.confirmButton, !selectedId && styles.disabledButton]} 
+            <TouchableOpacity
+              style={[styles.confirmButton, !selectedId && styles.disabledButton]}
               onPress={handleConfirmSelection}
               disabled={!selectedId || isRegenerating}
             >

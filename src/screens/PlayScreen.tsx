@@ -33,7 +33,7 @@ export default function PlayScreen() {
   const route = useRoute<PlayScreenRouteProp>();
   const { recording: recordingParam } = route.params || { recording: null };
 
-  // 使用响应式录音数据
+  // 使用响应式咒语数据
   const recording = useRecording(recordingParam?.id || null);
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -44,7 +44,7 @@ export default function PlayScreen() {
     setIsPlaying(!isPlaying);
   };
 
-  // 如果录音不存在，显示默认信息
+  // 如果咒语不存在，显示默认信息
   const displayRecording = recording ||
     recordingParam || {
       title: '未知音频',

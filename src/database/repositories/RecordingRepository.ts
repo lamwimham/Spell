@@ -2,7 +2,7 @@ import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import Recording from '../models/Recording';
 
-// 录音数据类型定义
+// 咒语数据类型定义
 export interface RecordingData {
   title: string;
   script?: string;
@@ -22,7 +22,7 @@ export interface RecordingQuery {
 
 export class RecordingRepository {
   /**
-   * 创建新录音
+   * 创建新咒语
    */
   static async create(data: RecordingData): Promise<Recording> {
     const newRecording = await database.write(async () => {
@@ -40,21 +40,21 @@ export class RecordingRepository {
   }
 
   /**
-   * 获取所有录音（静态查询）
+   * 获取所有咒语（静态查询）
    */
   static async getAll(): Promise<Recording[]> {
     return await database.get<Recording>('recordings').query().fetch();
   }
 
   /**
-   * 根据ID获取录音（静态查询）
+   * 根据ID获取咒语（静态查询）
    */
   static async getById(id: string): Promise<Recording> {
     return await database.get<Recording>('recordings').find(id);
   }
 
   /**
-   * 更新录音
+   * 更新咒语
    */
   static async update(id: string, data: Partial<RecordingData>): Promise<void> {
     const recording = await database.get<Recording>('recordings').find(id);
@@ -72,7 +72,7 @@ export class RecordingRepository {
   }
 
   /**
-   * 删除录音
+   * 删除咒语
    */
   static async delete(id: string): Promise<void> {
     const recording = await database.get<Recording>('recordings').find(id);
@@ -95,21 +95,21 @@ export class RecordingRepository {
   }
 
   /**
-   * 响应式查询所有录音（按创建时间倒序）
+   * 响应式查询所有咒语（按创建时间倒序）
    */
   static observeAll() {
     return database.get<Recording>('recordings').query(Q.sortBy('created_at', 'desc')).observe();
   }
 
   /**
-   * 响应式查询单个录音
+   * 响应式查询单个咒语
    */
   static observeById(id: string) {
     return database.get<Recording>('recordings').findAndObserve(id);
   }
 
   /**
-   * 响应式查询带条件的录音列表
+   * 响应式查询带条件的咒语列表
    */
   static observeWithQuery(query?: RecordingQuery) {
     const queries = [];
@@ -143,14 +143,14 @@ export class RecordingRepository {
   }
 
   /**
-   * 获取录音总数（静态查询）
+   * 获取咒语总数（静态查询）
    */
   static async getCount(): Promise<number> {
     return await database.get<Recording>('recordings').query().fetchCount();
   }
 
   /**
-   * 响应式获取录音总数
+   * 响应式获取咒语总数
    */
   static observeCount() {
     return database.get<Recording>('recordings').query().observeCount();

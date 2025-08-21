@@ -7,7 +7,7 @@ import useAudioKit from '../hooks/useAudioKit';
 const AudioKitExampleScreen = () => {
   const {
     audioState,
-    // 录音方法
+    // 咒语方法
     startRecording,
     stopRecording,
     pauseRecording,
@@ -29,49 +29,49 @@ const AudioKitExampleScreen = () => {
   const [volume, setVolumeState] = useState(1.0);
   const [speed, setSpeedState] = useState(1.0);
 
-  // 录音相关操作
+  // 咒语相关操作
   const handleStartRecording = async () => {
     try {
       const uri = await startRecording();
-      Alert.alert('开始录音', `录音文件将保存到: ${uri}`);
+      Alert.alert('开始咒语', `咒语文件将保存到: ${uri}`);
     } catch (error: any) {
-      Alert.alert('录音错误', error.message);
+      Alert.alert('咒语错误', error.message);
     }
   };
 
   const handleStopRecording = async () => {
     try {
       const uri = await stopRecording();
-      Alert.alert('录音完成', `录音文件已保存到: ${uri}`);
+      Alert.alert('咒语完成', `咒语文件已保存到: ${uri}`);
     } catch (error: any) {
-      Alert.alert('停止录音错误', error.message);
+      Alert.alert('停止咒语错误', error.message);
     }
   };
 
   const handlePauseRecording = async () => {
     try {
       await pauseRecording();
-      Alert.alert('录音已暂停');
+      Alert.alert('咒语已暂停');
     } catch (error: any) {
-      Alert.alert('暂停录音错误', error.message);
+      Alert.alert('暂停咒语错误', error.message);
     }
   };
 
   const handleResumeRecording = async () => {
     try {
       await resumeRecording();
-      Alert.alert('录音已恢复');
+      Alert.alert('咒语已恢复');
     } catch (error: any) {
-      Alert.alert('恢复录音错误', error.message);
+      Alert.alert('恢复咒语错误', error.message);
     }
   };
 
   const handleResetRecording = async () => {
     try {
       await resetRecording();
-      Alert.alert('录音已重置');
+      Alert.alert('咒语已重置');
     } catch (error: any) {
-      Alert.alert('重置录音错误', error.message);
+      Alert.alert('重置咒语错误', error.message);
     }
   };
 
@@ -79,7 +79,7 @@ const AudioKitExampleScreen = () => {
   const handleStartPlaying = async () => {
     const uri = getRecordingUri();
     if (!uri) {
-      Alert.alert('错误', '没有录音文件可播放');
+      Alert.alert('错误', '没有咒语文件可播放');
       return;
     }
 
@@ -94,7 +94,7 @@ const AudioKitExampleScreen = () => {
   const handleStartLoopPlaying = async () => {
     const uri = getRecordingUri();
     if (!uri) {
-      Alert.alert('错误', '没有录音文件可播放');
+      Alert.alert('错误', '没有咒语文件可播放');
       return;
     }
 
@@ -167,13 +167,13 @@ const AudioKitExampleScreen = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.title}>AudioKit 使用示例</Text>
 
-      {/* 录音部分 */}
+      {/* 咒语部分 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>录音控制</Text>
+        <Text style={styles.sectionTitle}>咒语控制</Text>
 
         <View style={styles.statusContainer}>
           <Text style={styles.statusText}>
-            状态: {audioState.isRecording ? (audioState.isPaused ? '已暂停' : '录音中') : '未录音'}
+            状态: {audioState.isRecording ? (audioState.isPaused ? '已暂停' : '咒语中') : '未咒语'}
           </Text>
           <Text style={styles.timeText}>时间: {audioState.recordTime}</Text>
         </View>
@@ -184,7 +184,7 @@ const AudioKitExampleScreen = () => {
             onPress={handleStartRecording}
             disabled={audioState.isRecording}
           >
-            <Text style={styles.buttonText}>开始录音</Text>
+            <Text style={styles.buttonText}>开始咒语</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -192,7 +192,7 @@ const AudioKitExampleScreen = () => {
             onPress={handleStopRecording}
             disabled={!audioState.isRecording}
           >
-            <Text style={styles.buttonText}>停止录音</Text>
+            <Text style={styles.buttonText}>停止咒语</Text>
           </TouchableOpacity>
         </View>
 
@@ -205,7 +205,7 @@ const AudioKitExampleScreen = () => {
             onPress={handlePauseRecording}
             disabled={!audioState.isRecording || audioState.isPaused}
           >
-            <Text style={styles.buttonText}>暂停录音</Text>
+            <Text style={styles.buttonText}>暂停咒语</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -216,7 +216,7 @@ const AudioKitExampleScreen = () => {
             onPress={handleResumeRecording}
             disabled={!audioState.isRecording || !audioState.isPaused}
           >
-            <Text style={styles.buttonText}>恢复录音</Text>
+            <Text style={styles.buttonText}>恢复咒语</Text>
           </TouchableOpacity>
         </View>
 
@@ -225,12 +225,12 @@ const AudioKitExampleScreen = () => {
           onPress={handleResetRecording}
           disabled={!audioState.isRecording}
         >
-          <Text style={styles.buttonText}>重置录音</Text>
+          <Text style={styles.buttonText}>重置咒语</Text>
         </TouchableOpacity>
 
         {getRecordingUri() && (
           <View style={styles.uriContainer}>
-            <Text style={styles.uriLabel}>录音文件:</Text>
+            <Text style={styles.uriLabel}>咒语文件:</Text>
             <Text style={styles.uriText} numberOfLines={3}>
               {getRecordingUri()}
             </Text>

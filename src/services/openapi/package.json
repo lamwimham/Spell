@@ -9,7 +9,11 @@
   "dependencies": {
     "openai": "^4.0.0"
   },
-  "keywords": ["openai", "api", "client"],
+  "keywords": [
+    "openai",
+    "api",
+    "client"
+  ],
   "author": "SpellApp Team",
   "license": "MIT"
 }

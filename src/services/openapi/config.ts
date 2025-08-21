@@ -5,7 +5,7 @@
 // 例如通过原生代码或配置文件
 export const OPENAPI_DEFAULT_BASE_URL = 'https://api.deepseek.com';
 
-export const OPENAPI_API_KEY='sk-2cdf6abd8b384b0ca16907b58a4d0eec'
+export const OPENAPI_API_KEY = 'sk-2cdf6abd8b384b0ca16907b58a4d0eec';
 
 // 聊天完成端点
 export const OPENAPI_CHAT_COMPLETION_ENDPOINT = '/chat/completions';

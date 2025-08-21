@@ -14,7 +14,7 @@ export interface OpenAIChatRequest {
   frequency_penalty?: number;
   presence_penalty?: number;
   stream?: boolean;
-  response_format?: any
+  response_format?: any;
 }
 
 export interface OpenAIChatResponse {
