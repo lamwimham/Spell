@@ -460,6 +460,62 @@ npx react-native bundle --platform ios --dev false --entry-file index.js --bundl
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
+## 💾 WatermelonDB 版本信息存储
+
+SpellApp 集成了 WatermelonDB 进行版本信息的本地持久化存储，支持离线版本检查和历史版本追踪。
+
+### 核心功能
+
+- **本地优先检查**: 首先查询本地数据库中的版本信息
+- **离线支持**: 无网络时仍可进行版本检查
+- **数据持久化**: 版本信息长期保存，支持历史追踪
+- **自动清理**: 防止数据库无限增长
+
+### 数据库架构
+
+```typescript
+// 版本表结构
+tableSchema({
+  name: 'versions',
+  columns: [
+    { name: 'version', type: 'string' }, // 版本号
+    { name: 'build_number', type: 'number' }, // 构建号
+    { name: 'platform', type: 'string' }, // 平台 (ios/android)
+    { name: 'release_notes', type: 'string' }, // 更新日志
+    { name: 'download_url', type: 'string' }, // 下载链接
+    { name: 'force_update', type: 'boolean' }, // 是否强制更新
+    { name: 'checked_at', type: 'number' }, // 检查时间戳
+    { name: 'created_at', type: 'number' }, // 创建时间
+    { name: 'updated_at', type: 'number' }, // 更新时间
+  ],
+});
+```
+
+### 使用方法
+
+```typescript
+import { versionAPI } from '../services/version/api';
+
+// 基本版本检查
+const result = await versionAPI.checkForUpdate();
+
+// 直接使用Repository
+import { versionRepository } from '../../database';
+const latest = await versionRepository.getLatestVersion('ios');
+```
+
+## 📚 详细文档
+
+项目包含以下详细技术文档：
+
+- [数据库集成指南](docs/DATABASE_INTEGRATION.md) - WatermelonDB 集成说明
+- [数据库迁移指南](docs/DATABASE_MIGRATION_GUIDE.md) - 数据库版本迁移规范
+- [版本存储实现](docs/VERSION_STORAGE_IMPLEMENTATION.md) - 版本信息存储详细设计
+- [WatermelonDB 版本存储总结](docs/WATERMELONDB_VERSION_STORAGE_SUMMARY.md) - 实现总结和最佳实践
+- [播放屏幕优化](docs/PLAYSCREEN_OPTIMIZATION.md) - 播放界面性能优化
+- [播放屏幕更新](docs/PLAYSCREEN_UPDATE.md) - 播放功能更新记录
+- [版本更新说明](docs/VERSION_UPDATE.md) - 版本更新历史
+
 ## 📞 支持
 
 如果遇到问题，请：
