@@ -84,8 +84,9 @@ export default function PlayScreen() {
     });
 
     // 只有在播放完成后才触发完成处理，并且只执行一次
+    // 注意：播放完成后，audioState.isPlaying 仍然是 true，直到我们调用 stopPlaying()
+    // 所以我们只检查 currentPosition 和 totalDuration 来判断播放完成
     if (
-      !audioState.isPlaying &&
       audioState.currentPosition > 0 &&
       audioState.totalDuration > 0 &&
       audioState.currentPosition >= audioState.totalDuration &&
