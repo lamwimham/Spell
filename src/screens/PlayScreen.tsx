@@ -57,6 +57,8 @@ export default function PlayScreen() {
 
   // 当前循环次数
   const [currentLoop, setCurrentLoop] = useState(1);
+  // 播放完成状态，确保播放完成处理只执行一次
+  const [playbackCompleted, setPlaybackCompleted] = useState(false);
 
   // 加载播放设置
   useEffect(() => {
@@ -81,17 +83,29 @@ export default function PlayScreen() {
       totalDuration: audioState.totalDuration,
     });
 
-    // 只有在播放完成后才触发完成处理
+    // 只有在播放完成后才触发完成处理，并且只执行一次
     if (
-      // !audioState.isPlaying &&
+      !audioState.isPlaying &&
       audioState.currentPosition > 0 &&
       audioState.totalDuration > 0 &&
-      audioState.currentPosition >= audioState.totalDuration
+      audioState.currentPosition >= audioState.totalDuration &&
+      !playbackCompleted
     ) {
       console.log('播放完成，触发完成处理');
+      setPlaybackCompleted(true);
       handlePlaybackCompletion();
     }
-  }, [audioState.isPlaying, audioState.currentPosition, audioState.totalDuration]);
+
+    // 当开始新的播放时，重置播放完成状态
+    if (audioState.isPlaying && playbackCompleted) {
+      setPlaybackCompleted(false);
+    }
+  }, [
+    audioState.isPlaying,
+    audioState.currentPosition,
+    audioState.totalDuration,
+    playbackCompleted,
+  ]);
 
   // 播放完成处理
   const handlePlaybackCompletion = async () => {
@@ -107,6 +121,8 @@ export default function PlayScreen() {
       if (currentLoop < playbackSettings.loopCount) {
         // 继续循环
         setCurrentLoop(prev => prev + 1);
+        // 重置播放完成状态以允许下一次循环检测
+        setPlaybackCompleted(false);
         if (displayRecording.url) {
           try {
             await startPlaying(displayRecording.url, true);
@@ -151,6 +167,8 @@ export default function PlayScreen() {
           console.log('播放URL:', displayRecording.url);
           await startPlaying(displayRecording.url, playbackSettings.playMode === 'loop');
           setCurrentLoop(1);
+          // 重置播放完成状态
+          setPlaybackCompleted(false);
         } else {
           console.warn('音频URL为空');
           Alert.alert('播放错误', '音频文件路径无效');
@@ -167,6 +185,8 @@ export default function PlayScreen() {
     try {
       await stopPlaying();
       setCurrentLoop(1);
+      // 重置播放完成状态
+      setPlaybackCompleted(false);
     } catch (error: any) {
       console.error('停止播放失败:', error);
     }
