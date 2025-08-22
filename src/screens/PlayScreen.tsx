@@ -116,8 +116,9 @@ export default function PlayScreen() {
           }
         }
       } else {
-        // 循环完成
+        // 循环完成，停止播放以确保按钮状态正确更新
         setCurrentLoop(1);
+        await stopPlaying();
       }
     } else {
       // 单次播放完成
