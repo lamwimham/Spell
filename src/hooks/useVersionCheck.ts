@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Alert, Linking } from 'react-native';
 import { versionAPI, VersionCheckResponse } from '../services/version/api';
 

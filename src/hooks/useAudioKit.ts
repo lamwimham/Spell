@@ -1,5 +1,5 @@
 // 全局音频管理 Hook
-// 提供咒语和播放功能的统一接口
+// 提供录音和播放功能的统一接口
 
 import { useState, useEffect, useRef } from 'react';
 import AudioRecorderPlayer, {
@@ -8,6 +8,8 @@ import AudioRecorderPlayer, {
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
 } from 'react-native-audio-recorder-player';
+import RNFS from 'react-native-fs';
+import { Platform } from 'react-native';
 
 interface AudioState {
   isRecording: boolean;
@@ -25,7 +27,7 @@ interface AudioKitHook {
   // 状态
   audioState: AudioState;
 
-  // 咒语方法
+  // 录音方法
   startRecording: () => Promise<string>;
   stopRecording: () => Promise<string>;
   pauseRecording: () => Promise<string>;
@@ -62,7 +64,7 @@ const useAudioKit = (): AudioKitHook => {
     duration: '00:00:00',
   });
 
-  // 当前咒语和播放的 URI
+  // 当前录音和播放的 URI
   const recordingUri = useRef<string | null>(null);
   const playingUri = useRef<string | null>(null);
   const isLooping = useRef<boolean>(false);
@@ -84,7 +86,7 @@ const useAudioKit = (): AudioKitHook => {
     AudioRecorderPlayer.removeRecordBackListener();
     AudioRecorderPlayer.removePlayBackListener();
 
-    // 停止咒语和播放
+    // 停止录音和播放
     if (audioState.isRecording) {
       AudioRecorderPlayer.stopRecorder().catch(() => {});
     }
@@ -94,10 +96,10 @@ const useAudioKit = (): AudioKitHook => {
     }
   };
 
-  // 咒语相关方法
+  // 录音相关方法
   const startRecording = async (): Promise<string> => {
     if (audioState.isRecording) {
-      throw new Error('已经在咒语中');
+      throw new Error('已经在录音中');
     }
 
     try {
@@ -113,7 +115,14 @@ const useAudioKit = (): AudioKitHook => {
         AudioSourceAndroid: AudioSourceAndroidType.MIC,
       };
 
-      // 设置咒语进度监听器
+      // 生成唯一的文件名
+      const timestamp = new Date().getTime();
+      const fileName = `recording_${timestamp}.${Platform.OS === 'ios' ? 'm4a' : 'mp4'}`;
+
+      // 使用Documents目录确保文件持久化
+      const recordingPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+      // 设置录音进度监听器
       AudioRecorderPlayer.addRecordBackListener(e => {
         setAudioState(prev => ({
           ...prev,
@@ -122,8 +131,8 @@ const useAudioKit = (): AudioKitHook => {
         }));
       });
 
-      // 开始咒语
-      const uri = await AudioRecorderPlayer.startRecorder(undefined, audioSet, true);
+      // 开始录音
+      const uri = await AudioRecorderPlayer.startRecorder(recordingPath, audioSet, true);
       recordingUri.current = uri;
 
       setAudioState(prev => ({
@@ -134,18 +143,18 @@ const useAudioKit = (): AudioKitHook => {
 
       return uri;
     } catch (err: any) {
-      console.error('开始咒语失败:', err);
+      console.error('开始录音失败:', err);
       // 提供更具体的错误信息
       if (err.message && err.message.includes('permission')) {
-        throw new Error('咒语权限被拒绝，请在设置中允许访问麦克风');
+        throw new Error('录音权限被拒绝，请在设置中允许访问麦克风');
       }
-      throw new Error(`咒语启动失败: ${err.message || err}`);
+      throw new Error(`录音启动失败: ${err.message || err}`);
     }
   };
 
   const stopRecording = async (): Promise<string> => {
     if (!audioState.isRecording) {
-      throw new Error('当前没有在咒语');
+      throw new Error('当前没有在录音');
     }
 
     try {
@@ -160,14 +169,14 @@ const useAudioKit = (): AudioKitHook => {
 
       return uri;
     } catch (err: any) {
-      console.error('停止咒语失败:', err);
-      throw new Error(`停止咒语失败: ${err.message || err}`);
+      console.error('停止录音失败:', err);
+      throw new Error(`停止录音失败: ${err.message || err}`);
     }
   };
 
   const pauseRecording = async (): Promise<string> => {
     if (!audioState.isRecording) {
-      throw new Error('当前没有在咒语');
+      throw new Error('当前没有在录音');
     }
 
     try {
@@ -180,14 +189,14 @@ const useAudioKit = (): AudioKitHook => {
 
       return result;
     } catch (err: any) {
-      console.error('暂停咒语失败:', err);
-      throw new Error(`暂停咒语失败: ${err.message || err}`);
+      console.error('暂停录音失败:', err);
+      throw new Error(`暂停录音失败: ${err.message || err}`);
     }
   };
 
   const resumeRecording = async (): Promise<string> => {
     if (!audioState.isRecording || !audioState.isPaused) {
-      throw new Error('当前没有暂停的咒语');
+      throw new Error('当前没有暂停的录音');
     }
 
     try {
@@ -200,8 +209,8 @@ const useAudioKit = (): AudioKitHook => {
 
       return result;
     } catch (err: any) {
-      console.error('恢复咒语失败:', err);
-      throw new Error(`恢复咒语失败: ${err.message || err}`);
+      console.error('恢复录音失败:', err);
+      throw new Error(`恢复录音失败: ${err.message || err}`);
     }
   };
 
@@ -210,7 +219,7 @@ const useAudioKit = (): AudioKitHook => {
       try {
         await stopRecording();
       } catch (err) {
-        console.warn('停止咒语时出错:', err);
+        console.warn('停止录音时出错:', err);
       }
     }
 
@@ -232,20 +241,21 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
+      console.log('开始播放音频:', uri);
       isLooping.current = looping;
       playingUri.current = uri;
 
       // 设置播放进度监听器
       AudioRecorderPlayer.addPlayBackListener(e => {
         // 检查是否播放完成
+        console.log('检查是否播放完成:', e);
         if (e.currentPosition >= e.duration) {
           if (isLooping.current) {
             // 循环播放
+            console.log('循环播放');
             AudioRecorderPlayer.seekToPlayer(0);
-          } else {
-            // 播放完成
-            stopPlaying();
           }
+          // 注意：我们不在此处调用stopPlaying()，让PlayScreen组件处理播放完成事件
         }
 
         setAudioState(prev => ({
@@ -390,7 +400,7 @@ const useAudioKit = (): AudioKitHook => {
     // 状态
     audioState,
 
-    // 咒语方法
+    // 录音方法
     startRecording,
     stopRecording,
     pauseRecording,

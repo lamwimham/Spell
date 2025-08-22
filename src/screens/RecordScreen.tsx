@@ -222,6 +222,14 @@ export function RecordScreen() {
   // 计时器引用
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // 同步audioState.recordSecs到recordingTime状态
+  useEffect(() => {
+    if (audioState.isRecording && !audioState.isPaused) {
+      // recordSecs是以毫秒为单位的，需要转换为秒
+      setRecordingTime(Math.floor(audioState.recordSecs / 1000));
+    }
+  }, [audioState.recordSecs, audioState.isRecording, audioState.isPaused]);
+
   // 格式化咒语时间
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -235,11 +243,11 @@ export function RecordScreen() {
       await startRecording();
       setRecordingTime(0);
 
-      // 启动计时器
-      timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-        setAmplitude(Math.random() * 0.8 + 0.2); // 模拟音频振幅
-      }, 1000);
+      // 清理可能存在的旧计时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     } catch (error: any) {
       Alert.alert('错误', error.message || '无法开始咒语，请检查麦克风权限');
     }
@@ -251,6 +259,7 @@ export function RecordScreen() {
       await pauseRecording();
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     } catch (error: any) {
       Alert.alert('错误', error.message || '暂停咒语失败');
@@ -262,10 +271,11 @@ export function RecordScreen() {
     try {
       await resumeRecording();
 
-      timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-        setAmplitude(Math.random() * 0.8 + 0.2);
-      }, 1000);
+      // 清理可能存在的旧计时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     } catch (error: any) {
       Alert.alert('错误', error.message || '继续咒语失败');
     }
@@ -277,6 +287,7 @@ export function RecordScreen() {
       await stopRecording();
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
       setAmplitude(0);
     } catch (error: any) {
@@ -333,6 +344,7 @@ export function RecordScreen() {
             setRecordingTime(0);
             if (timerRef.current) {
               clearInterval(timerRef.current);
+              timerRef.current = null;
             }
           } catch (error: any) {
             Alert.alert('错误', error.message || '取消咒语失败');
@@ -379,6 +391,7 @@ export function RecordScreen() {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
   }, []);
@@ -539,6 +552,10 @@ export function RecordScreen() {
               try {
                 await resetRecording();
                 setRecordingTime(0);
+                if (timerRef.current) {
+                  clearInterval(timerRef.current);
+                  timerRef.current = null;
+                }
               } catch (error: any) {
                 Alert.alert('错误', error.message || '重置咒语失败');
               }

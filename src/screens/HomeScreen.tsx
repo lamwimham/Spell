@@ -19,7 +19,7 @@ import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 import { useRecordings, useRecordingActions } from '../hooks/useRecordings';
 import Recording from '../database/models/Recording';
 import { RootStackParamList } from '../types/navigation';
-import { scheduleTestNotification } from '../services/notifications/scheduleManager';
+// import { scheduleTestNotification } from '../services/notifications/scheduleManager';
 
 // 启用LayoutAnimation在Android上工作
 if (Platform.OS === 'android') {
@@ -229,13 +229,13 @@ export default function HomeScreen() {
       />
 
       {/* FAB按钮 - 测试通知 */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.fabButton, { bottom: 150 }]}
         onPress={scheduleTestNotification}
         activeOpacity={0.8}
       >
         <Icon name="notifications" size={28} color="#FFFFFF" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* FAB按钮 - 咒语 */}
       <TouchableOpacity

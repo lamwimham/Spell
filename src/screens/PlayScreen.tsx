@@ -83,7 +83,7 @@ export default function PlayScreen() {
 
     // 只有在播放完成后才触发完成处理
     if (
-      !audioState.isPlaying &&
+      // !audioState.isPlaying &&
       audioState.currentPosition > 0 &&
       audioState.totalDuration > 0 &&
       audioState.currentPosition >= audioState.totalDuration
@@ -117,6 +117,7 @@ export default function PlayScreen() {
         }
       } else {
         // 循环完成，停止播放以确保按钮状态正确更新
+        console.log('循环播放完成，停止播放');
         setCurrentLoop(1);
         await stopPlaying();
       }
