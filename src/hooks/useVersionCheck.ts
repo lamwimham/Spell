@@ -93,15 +93,16 @@ export const useVersionCheck = () => {
 
   /**
    * 应用启动时自动检查更新
+   * 注意：此逻辑已移至 VersionCheckStartup 组件中，避免重复检查
    */
-  useEffect(() => {
-    // 延迟检查更新，确保应用完全启动
-    const timer = setTimeout(() => {
-      checkForUpdate();
-    }, 3000);
+  // useEffect(() => {
+  //   // 延迟检查更新，确保应用完全启动
+  //   const timer = setTimeout(() => {
+  //     checkForUpdate();
+  //   }, 3000);
 
-    return () => clearTimeout(timer);
-  }, [checkForUpdate]);
+  //   return () => clearTimeout(timer);
+  // }, [checkForUpdate]);
 
   return {
     checkForUpdate,
