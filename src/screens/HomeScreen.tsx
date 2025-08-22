@@ -1,5 +1,5 @@
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import React, { useState, useRef } from 'react';
+import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   FlatList,
   StatusBar,
@@ -12,6 +12,8 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  useColorScheme,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { DrawerPanel } from '../components/ui/DrawerPanel';
@@ -19,6 +21,7 @@ import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 import { useRecordings, useRecordingActions } from '../hooks/useRecordings';
 import Recording from '../database/models/Recording';
 import { RootStackParamList } from '../types/navigation';
+import { Colors } from '../constants/Colors';
 // import { scheduleTestNotification } from '../services/notifications/scheduleManager';
 
 // 启用LayoutAnimation在Android上工作
@@ -33,10 +36,34 @@ export default function HomeScreen() {
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   // 获取咒语列表和操作方法
   const recordings = useRecordings();
   const { deleteRecording } = useRecordingActions();
+
+  // 当屏幕重新获得焦点时刷新数据
+  useFocusEffect(
+    useCallback(() => {
+      console.log('HomeScreen获得焦点，刷新数据');
+      // 这里不需要额外操作，因为useRecordings钩子已经设置了响应式订阅
+      // 但我们可以添加一些调试日志来确认焦点事件被触发
+      return () => {
+        // 清理函数，当屏幕失去焦点时执行
+      };
+    }, []),
+  );
+
+  // 处理下拉刷新
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    // 等待一小段时间以显示刷新动画
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
 
   // 动画值
   const checkboxAnimation = useRef(new Animated.Value(0)).current;
@@ -127,16 +154,23 @@ export default function HomeScreen() {
             onPress={() => toggleSelectItem(item.id)}
             style={[styles.checkbox, selectedItems.includes(item.id) && styles.checkboxSelected]}
           >
-            {selectedItems.includes(item.id) && <Icon name="checkmark" size={16} color="#FFFFFF" />}
+            {selectedItems.includes(item.id) && (
+              <Icon name="checkmark" size={16} color={theme.buttonText} />
+            )}
           </TouchableOpacity>
         </View>
       )}
 
       <View style={styles.iconContainer}>
-        <Icon name="mic" size={32} color="#6B7280" />
+        <Icon name="mic" size={32} color={theme.icon} />
       </View>
       <View style={styles.recordingInfo}>
-        <Text style={styles.recordingTitle}>{item.title}</Text>
+        <Text style={styles.recordingTitle} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={styles.recordingScript} numberOfLines={1}>
+          {item.script}
+        </Text>
         <View style={styles.recordingMetaContainer}>
           <Text style={styles.recordingMeta}>{formatDuration(item.duration)}</Text>
           <Text style={styles.recordingMetaSeparator}>-</Text>
@@ -151,7 +185,7 @@ export default function HomeScreen() {
             navigation.navigate('Play', { recording: item });
           }}
         >
-          <Icon name="play" size={24} color="#6B7280" />
+          <Icon name="play" size={24} color={theme.icon} />
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -160,21 +194,21 @@ export default function HomeScreen() {
   // 空状态组件
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Icon name="mic-outline" size={64} color="#C8C5D0" />
+      <Icon name="mic-outline" size={64} color={theme.textLight} />
       <Text style={styles.emptyStateTitle}>还没有咒语</Text>
       <Text style={styles.emptyStateSubtitle}>点击下方麦克风按钮开始录制</Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
       {isDeleteMode ? (
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={toggleDeleteMode}>
-            <Icon name="close-circle" size={24} color="#FF3B30" />
+            <Icon name="close-circle" size={24} color={theme.error} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>咒语库</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>咒语库</Text>
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={handleDelete}
@@ -195,7 +229,7 @@ export default function HomeScreen() {
               <Icon
                 name="checkmark-circle"
                 size={24}
-                color={selectedItems.length > 0 ? '#007AFF' : '#A0A0A0'}
+                color={selectedItems.length > 0 ? theme.primary : theme.textLight}
               />
             </Animated.View>
           </TouchableOpacity>
@@ -208,13 +242,15 @@ export default function HomeScreen() {
           onLeftIconPress={() => setIsDrawerVisible(true)}
           rightIconName="trash-outline"
           onRightIconPress={toggleDeleteMode}
-          iconColor="#7572B7"
+          iconColor={theme.primary}
         />
       )}
 
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>我的咒语</Text>
-        <Text style={styles.subtitle}>您录制的音频文件将显示在这里</Text>
+        <Text style={[styles.title, { color: theme.text }]}>我的咒语</Text>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+          您录制的音频文件将显示在这里
+        </Text>
       </View>
 
       <FlatList
@@ -226,6 +262,16 @@ export default function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.primary]}
+            tintColor={theme.primary}
+            title="刷新中..."
+            titleColor={theme.textSecondary}
+          />
+        }
       />
 
       {/* FAB按钮 - 测试通知 */}
@@ -239,14 +285,14 @@ export default function HomeScreen() {
 
       {/* FAB按钮 - 咒语 */}
       <TouchableOpacity
-        style={styles.fabButton}
+        style={[styles.fabButton, { backgroundColor: theme.primary }]}
         onPress={() => navigation.navigate('Record')}
         activeOpacity={0.8}
       >
-        <Icon name="mic" size={28} color="#FFFFFF" />
+        <Icon name="mic" size={28} color={theme.buttonText} />
       </TouchableOpacity>
 
-      <View style={styles.tabIndicator} />
+      <View style={[styles.tabIndicator, { backgroundColor: theme.primary }]} />
 
       {/* 抽屉面板 */}
       <DrawerPanel
@@ -264,12 +310,12 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: Colors.light.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#007AFF',
+    backgroundColor: Colors.light.primary,
   },
   checkboxContainer: {
     width: 40,
@@ -279,7 +325,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#FDFCFF',
   },
   header: {
     flexDirection: 'row',
@@ -296,7 +341,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 15,
     fontWeight: '400',
-    color: '#393640',
     fontFamily: 'Rubik',
   },
   deleteButton: {
@@ -309,13 +353,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '400',
-    color: '#393640',
     fontFamily: 'Rubik',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 17,
-    color: '#535059',
     fontFamily: 'Rubik',
     lineHeight: 22,
   },
@@ -332,41 +374,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    height: 80,
+    minHeight: 80,
   },
   iconContainer: {
     width: 48,
     height: 56,
     borderRadius: 8,
-    backgroundColor: '#E3E3F1',
+    backgroundColor: Colors.light.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   recordingInfo: {
     flex: 1,
     marginLeft: 12,
-    height: 46,
     justifyContent: 'center',
   },
   recordingTitle: {
     fontSize: 17,
     fontWeight: '400',
-    color: '#393640',
+    color: Colors.light.text,
     fontFamily: 'Rubik',
-    marginBottom: 5,
+    marginBottom: 2,
+  },
+  recordingScript: {
+    fontSize: 15,
+    color: Colors.light.textSecondary,
+    fontFamily: 'Rubik',
+    marginBottom: 2,
   },
   recordingMetaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   recordingMeta: {
-    fontSize: 15,
-    color: '#535059',
+    fontSize: 13,
+    color: Colors.light.textSecondary,
     fontFamily: 'Rubik',
   },
   recordingMetaSeparator: {
-    fontSize: 15,
-    color: '#D2CED9',
+    fontSize: 13,
+    color: Colors.light.border,
     fontFamily: 'Rubik',
     marginHorizontal: 8,
   },
@@ -379,7 +426,6 @@ const styles = StyleSheet.create({
     bottom: 80,
     width: 56,
     height: 56,
-    backgroundColor: '#7572B7',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -392,7 +438,6 @@ const styles = StyleSheet.create({
   tabIndicator: {
     width: 139,
     height: 5,
-    backgroundColor: 'black',
     borderRadius: 100,
     alignSelf: 'center',
     marginBottom: 8,
@@ -406,13 +451,13 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: '500',
-    color: '#393640',
+    color: Colors.light.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateSubtitle: {
     fontSize: 16,
-    color: '#535059',
+    color: Colors.light.textSecondary,
     textAlign: 'center',
   },
 });

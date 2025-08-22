@@ -5,11 +5,12 @@ import {
   Text,
   StatusBar,
   TouchableOpacity,
-  ScrollView,
   Alert,
   Animated,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -404,6 +405,9 @@ export function RecordScreen() {
     }
 
     try {
+      // 收起软键盘
+      Keyboard.dismiss();
+
       // 设置重新生成状态
       setIsRegenerating(true);
 
@@ -495,7 +499,7 @@ export function RecordScreen() {
   // 处理轮盘选择的脚本
   const handleScriptSelection = (selectedScript: string) => {
     setScript(selectedScript);
-    // Alert.alert('成功', '已选择文稿');
+    // Alert.alert('成功', '已选择咒语');
   };
 
   // 渲染咒语控制按钮
@@ -594,7 +598,13 @@ export function RecordScreen() {
         onBackPress={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={20}
+      >
         {/* 文稿信息 */}
         <View style={styles.scriptSection}>
           <View style={styles.titleContainer}>
@@ -681,7 +691,7 @@ export function RecordScreen() {
             ))
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* 脚本选择垂直轮播模态框 */}
       <VerticalScriptCarousel
