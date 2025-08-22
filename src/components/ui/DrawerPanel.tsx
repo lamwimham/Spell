@@ -8,13 +8,15 @@ import {
   Dimensions,
   PanResponder,
   Image,
+  ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ToggleSwitch } from './ToggleSwitch';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = SCREEN_WIDTH * 0.75; // 75%屏幕宽度
+const DRAWER_WIDTH = SCREEN_WIDTH * 0.80; // 75%屏幕宽度
 const PAN_RESPONDER_THRESHOLD = 15; // 降低阈值，更容易触发
 const PAN_RESPONDER_VELOCITY_THRESHOLD = -0.3; // 降低速度阈值
 const PAN_RESPONDER_DISTANCE_THRESHOLD = -30; // 降低距离阈值
@@ -209,16 +211,12 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
         style={[
           styles.drawer,
           {
-            paddingTop: insets.top,
-            paddingBottom: insets.bottom,
             transform: [{ translateX }],
           },
         ]}
-        {...panResponder.panHandlers}
       >
-        {/* 头部用户信息 */}
-        <View style={styles.userSection}>
-          <View style={styles.userHeader}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={styles.drawerHeader}>
             <View style={styles.avatarContainer}>
               <Image source={{ uri: userData.avatar }} style={styles.avatar} />
             </View>
@@ -227,141 +225,135 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
               <Icon name="close" size={24} color="#535059" />
             </TouchableOpacity>
           </View>
-
+          
           <Text style={styles.userName}>{userData.name}</Text>
           <Text style={styles.userBio}>{userData.bio}</Text>
           <Text style={styles.joinDate}>{userData.joinDate}</Text>
-        </View>
-
-        {/* 统计数据 */}
-        <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>学习统计</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userStats.totalDays}</Text>
-              <Text style={styles.statLabel}>总天数</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userStats.currentStreak}</Text>
-              <Text style={styles.statLabel}>连续天数</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userStats.totalRecordings}</Text>
-              <Text style={styles.statLabel}>咒语数</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{userStats.totalListeningTime}</Text>
-              <Text style={styles.statLabel}>收听时长</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 打卡记录 */}
-        <View style={styles.checkInSection}>
-          <Text style={styles.sectionTitle}>最近打卡</Text>
-          <View style={styles.checkInList}>
-            {checkInRecords.map((record, index) => (
-              <View key={index} style={styles.checkInItem}>
-                <View style={styles.checkInDate}>
-                  <Text style={styles.checkInDateText}>{record.date}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.checkInStatus,
-                    record.completed ? styles.checkInCompleted : styles.checkInMissed,
-                  ]}
-                >
-                  <Icon
-                    name={record.completed ? 'checkmark-circle' : 'close-circle'}
-                    size={16}
-                    color={record.completed ? '#4CAF50' : '#FF6B6B'}
-                  />
-                </View>
-                <Text style={styles.checkInDetails}>
-                  {record.completed
-                    ? `${record.recordings}咒语 ${record.listeningTime}分钟`
-                    : '未完成'}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* 系统设置 */}
-        <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>系统设置</Text>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Icon name="notifications-outline" size={20} color="#7572B7" />
-              <Text style={styles.settingLabel}>推送通知</Text>
-            </View>
-            <ToggleSwitch
-              value={settings.notifications}
-              onValueChange={value => updateSetting('notifications', value)}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Icon name="moon-outline" size={20} color="#7572B7" />
-              <Text style={styles.settingLabel}>深色模式</Text>
-            </View>
-            <ToggleSwitch
-              value={settings.darkMode}
-              onValueChange={value => updateSetting('darkMode', value)}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Icon name="play-circle-outline" size={20} color="#7572B7" />
-              <Text style={styles.settingLabel}>自动播放</Text>
-            </View>
-            <ToggleSwitch
-              value={settings.autoPlay}
-              onValueChange={value => updateSetting('autoPlay', value)}
-            />
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingInfo}>
-              <Icon name="alarm-outline" size={20} color="#7572B7" />
-              <Text style={styles.settingLabel}>每日提醒</Text>
-            </View>
-            <ToggleSwitch
-              value={settings.dailyReminder}
-              onValueChange={value => updateSetting('dailyReminder', value)}
-            />
-          </View>
-        </View>
-
-        {/* 底部菜单 */}
-        <View style={styles.menuSection}>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              onNavigate?.('Settings');
-              onClose();
-            }}
+          
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={true}
           >
-            <Icon name="settings-outline" size={20} color="#535059" />
-            <Text style={styles.menuItemText}>高级设置</Text>
-            <Icon name="chevron-forward" size={16} color="#C8C5D0" />
-          </TouchableOpacity>
+            {/* 统计数据 */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>学习统计</Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{userStats.totalDays}</Text>
+                  <Text style={styles.statLabel}>总天数</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{userStats.currentStreak}</Text>
+                  <Text style={styles.statLabel}>连续天数</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{userStats.totalRecordings}</Text>
+                  <Text style={styles.statLabel}>咒语数</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{userStats.totalListeningTime}</Text>
+                  <Text style={styles.statLabel}>收听时长</Text>
+                </View>
+              </View>
+            </View>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <Icon name="help-circle-outline" size={20} color="#535059" />
-            <Text style={styles.menuItemText}>帮助与反馈</Text>
-            <Icon name="chevron-forward" size={16} color="#C8C5D0" />
-          </TouchableOpacity>
+            {/* 打卡记录 */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>最近打卡</Text>
+              <View style={styles.checkInList}>
+                {checkInRecords.map((record, index) => (
+                  <View key={index} style={styles.checkInItem}>
+                    <View style={styles.checkInDate}>
+                      <Text style={styles.checkInDateText}>{record.date}</Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.checkInStatus,
+                        record.completed ? styles.checkInCompleted : styles.checkInMissed,
+                      ]}
+                    >
+                      <Icon
+                        name={record.completed ? 'checkmark-circle' : 'close-circle'}
+                        size={16}
+                        color={record.completed ? '#4CAF50' : '#FF6B6B'}
+                      />
+                    </View>
+                    <Text style={styles.checkInDetails}>
+                      {record.completed
+                        ? `${record.recordings}咒语 ${record.listeningTime}分钟`
+                        : '未完成'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <Icon name="information-circle-outline" size={20} color="#535059" />
-            <Text style={styles.menuItemText}>关于应用</Text>
-            <Icon name="chevron-forward" size={16} color="#C8C5D0" />
-          </TouchableOpacity>
-        </View>
+            {/* 系统设置 */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>系统设置</Text>
+
+              <View style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Icon name="notifications-outline" size={20} color="#7572B7" />
+                  <Text style={styles.settingLabel}>推送通知</Text>
+                </View>
+                <ToggleSwitch
+                  value={settings.notifications}
+                  onValueChange={value => updateSetting('notifications', value)}
+                />
+              </View>
+
+              <View style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Icon name="moon-outline" size={20} color="#7572B7" />
+                  <Text style={styles.settingLabel}>深色模式</Text>
+                </View>
+                <ToggleSwitch
+                  value={settings.darkMode}
+                  onValueChange={value => updateSetting('darkMode', value)}
+                />
+              </View>
+
+              <View style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <Icon name="alarm-outline" size={20} color="#7572B7" />
+                  <Text style={styles.settingLabel}>每日提醒</Text>
+                </View>
+                <ToggleSwitch
+                  value={settings.dailyReminder}
+                  onValueChange={value => updateSetting('dailyReminder', value)}
+                />
+              </View>
+            </View>
+
+            {/* 底部菜单 */}
+            <View style={styles.section}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => {
+                  onNavigate?.('Settings');
+                  onClose();
+                }}
+              >
+                <Icon name="settings-outline" size={20} color="#535059" />
+                <Text style={styles.menuItemText}>高级设置</Text>
+                <Icon name="chevron-forward" size={16} color="#C8C5D0" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuItem}>
+                <Icon name="help-circle-outline" size={20} color="#535059" />
+                <Text style={styles.menuItemText}>帮助与反馈</Text>
+                <Icon name="chevron-forward" size={16} color="#C8C5D0" />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuItem}>
+                <Icon name="information-circle-outline" size={20} color="#535059" />
+                <Text style={styles.menuItemText}>关于应用</Text>
+                <Icon name="chevron-forward" size={16} color="#C8C5D0" />
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
       </Animated.View>
     </View>
   );
@@ -396,17 +388,13 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 10,
   },
-  userSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E3F1',
-  },
-  userHeader: {
+  drawerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 16,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   avatarContainer: {
     width: 80,
@@ -431,6 +419,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#393640',
     marginBottom: 4,
+    paddingHorizontal: 20,
   },
   userBio: {
     fontSize: 16,
@@ -438,14 +427,23 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#7572B7',
     marginBottom: 8,
+    paddingHorizontal: 20,
   },
   joinDate: {
     fontSize: 14,
     fontFamily: 'Rubik',
     fontWeight: '400',
     color: '#C8C5D0',
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
-  statsSection: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: 50,
+  },
+  section: {
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
@@ -487,12 +485,6 @@ const styles = StyleSheet.create({
     color: '#535059',
     textAlign: 'center',
   },
-  checkInSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E3F1',
-  },
   checkInList: {
     gap: 8,
   },
@@ -522,12 +514,6 @@ const styles = StyleSheet.create({
     color: '#C8C5D0',
     flex: 1,
   },
-  settingsSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E3F1',
-  },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -545,10 +531,6 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#393640',
     marginLeft: 12,
-  },
-  menuSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
   },
   menuItem: {
     flexDirection: 'row',

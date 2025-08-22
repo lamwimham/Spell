@@ -10,14 +10,15 @@ import { RecordScreen } from '../screens/RecordScreen';
 import AudioKitExampleScreen from '../screens/AudioKitExampleScreen';
 import ClockInScreen from '../screens/ClockInScreen';
 import ReminderScreen from '../screens/ReminderScreen';
-import { VersionCheckStartup } from '../components/VersionCheckStartup';
+import ThemeExampleScreen from '../screens/ThemeExampleScreen';
+// import { VersionCheckStartup } from '../components/VersionCheckStartup';
 
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <VersionCheckStartup />
+      {/* <VersionCheckStartup /> */}
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{
@@ -33,6 +34,7 @@ const AppNavigator = () => {
         <Stack.Screen name="AudioKitExample" component={AudioKitExampleScreen} />
         <Stack.Screen name="ClockIn" component={ClockInScreen} />
         <Stack.Screen name="Reminder" component={ReminderScreen} />
+        <Stack.Screen name="ThemeExample" component={ThemeExampleScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

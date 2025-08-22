@@ -58,7 +58,6 @@ export default function PlayScreen() {
   // 当前循环次数
   const [currentLoop, setCurrentLoop] = useState(1);
   // 播放完成状态，确保播放完成处理只执行一次
-  const [playbackCompleted, setPlaybackCompleted] = useState(false);
 
   // 加载播放设置
   useEffect(() => {
@@ -76,39 +75,20 @@ export default function PlayScreen() {
 
   // 处理播放完成事件
   useEffect(() => {
-    // 调试信息
-    console.log('音频状态变化:', {
-      isPlaying: audioState.isPlaying,
-      currentPosition: audioState.currentPosition,
-      totalDuration: audioState.totalDuration,
-    });
-
     // 只有在播放完成后才触发完成处理，并且只执行一次
     // 注意：播放完成后，audioState.isPlaying 仍然是 true，直到我们调用 stopPlaying()
     // 所以我们只检查 currentPosition 和 totalDuration 来判断播放完成
     if (
       audioState.currentPosition > 0 &&
       audioState.totalDuration > 0 &&
-      audioState.currentPosition >= audioState.totalDuration &&
-      !playbackCompleted
+      audioState.currentPosition >= audioState.totalDuration
     ) {
       console.log('播放完成，触发完成处理');
-      setPlaybackCompleted(true);
       handlePlaybackCompletion();
     }
+  }, [audioState.currentPosition, audioState.totalDuration]);
 
-    // 当开始新的播放时，重置播放完成状态
-    if (audioState.isPlaying && playbackCompleted) {
-      setPlaybackCompleted(false);
-    }
-  }, [
-    audioState.isPlaying,
-    audioState.currentPosition,
-    audioState.totalDuration,
-    playbackCompleted,
-  ]);
-
-  // 播放完成处理
+  // 播放完成一次录音的处理
   const handlePlaybackCompletion = async () => {
     // 增加播放次数
     // 确保我们有有效的ID来增加播放次数
@@ -123,7 +103,6 @@ export default function PlayScreen() {
         // 继续循环
         setCurrentLoop(prev => prev + 1);
         // 重置播放完成状态以允许下一次循环检测
-        setPlaybackCompleted(false);
         if (displayRecording.url) {
           try {
             await startPlaying(displayRecording.url, true);
@@ -149,12 +128,6 @@ export default function PlayScreen() {
   // 切换播放/暂停状态
   const togglePlayPause = async () => {
     try {
-      console.log('切换播放状态:', {
-        isPlaying: audioState.isPlaying,
-        isPaused: audioState.isPaused,
-        displayRecording,
-      });
-
       if (audioState.isPlaying) {
         console.log('暂停播放');
         await pausePlaying();
@@ -169,7 +142,6 @@ export default function PlayScreen() {
           await startPlaying(displayRecording.url, playbackSettings.playMode === 'loop');
           setCurrentLoop(1);
           // 重置播放完成状态
-          setPlaybackCompleted(false);
         } else {
           console.warn('音频URL为空');
           Alert.alert('播放错误', '音频文件路径无效');
@@ -187,7 +159,6 @@ export default function PlayScreen() {
       await stopPlaying();
       setCurrentLoop(1);
       // 重置播放完成状态
-      setPlaybackCompleted(false);
     } catch (error: any) {
       console.error('停止播放失败:', error);
     }
@@ -282,9 +253,46 @@ export default function PlayScreen() {
           handleStop();
           navigation.goBack();
         }}
-        showSettingsButton={true}
-        onSettingsPress={() => navigation.navigate('Settings' as never)}
+        showSettingsButton={false}
       />
+
+      {/* 咒语显示区域 */}
+      <View
+        style={{
+          marginTop: 16,
+          marginHorizontal: 20,
+          padding: 16,
+          backgroundColor: '#F5F5F5',
+          borderRadius: 12,
+          maxHeight: 150,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#393640',
+            marginBottom: 8,
+          }}
+        >
+          咒语
+        </Text>
+        <View
+          style={{
+            maxHeight: 100,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              color: '#535059',
+              lineHeight: 20,
+            }}
+          >
+            {recording?.script || recordingParam?.script || '暂无咒语'}
+          </Text>
+        </View>
+      </View>
 
       {/* 音频可视化区域 */}
       <View style={styles.imageContainer}>
@@ -413,6 +421,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FDFCFF',
+  },
+  scriptContainer: {
+    marginTop: 16,
+    marginHorizontal: 20,
+    padding: 16,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    maxHeight: 150,
+  },
+  scriptTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#393640',
+    marginBottom: 8,
+  },
+  scriptContent: {
+    maxHeight: 100,
+  },
+  scriptText: {
+    fontSize: 14,
+    color: '#535059',
+    lineHeight: 20,
   },
   header: {
     flexDirection: 'row',

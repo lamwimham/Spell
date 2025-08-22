@@ -80,14 +80,14 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>选择文稿</Text>
+            <Text style={styles.headerTitle}>选择咒语</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Icon name="close" size={24} color="#393640" />
             </TouchableOpacity>
           </View>
 
           <View style={styles.content}>
-            <Text style={styles.instructionText}>长按选择文稿，或滑动浏览选项</Text>
+            <Text style={styles.instructionText}>长按选择咒语，或滑动浏览选项</Text>
 
             <View style={styles.carouselContainer}>
               <FlatList

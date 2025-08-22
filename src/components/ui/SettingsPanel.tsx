@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View, ViewStyle, Alert, Platform, Linking } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
+import { useNavigation } from '@react-navigation/native';
 import { SettingsRow } from './SettingsRow';
 import { ToggleSwitch } from './ToggleSwitch';
 import { AudioPitchSlider } from './AudioPitchSlider';
@@ -115,6 +116,13 @@ export function SettingsPanel({ style, onSettingChange }: SettingsPanelProps) {
     });
   };
 
+  const navigation = useNavigation();
+
+  // 导航到主题示例页面
+  const navigateToThemeExample = () => {
+    navigation.navigate('ThemeExample' as never);
+  };
+
   return (
     <View style={[styles.container, style]}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -133,6 +141,16 @@ export function SettingsPanel({ style, onSettingChange }: SettingsPanelProps) {
           rightText="立即检查"
           showArrow
           onPress={checkForUpdate}
+          style={styles.settingRow}
+        />
+
+        {/* 主题示例页面 */}
+        <SettingsRow
+          iconName="color-palette-outline"
+          label="主题系统示例"
+          rightText="查看"
+          showArrow
+          onPress={navigateToThemeExample}
           style={styles.settingRow}
         />
 

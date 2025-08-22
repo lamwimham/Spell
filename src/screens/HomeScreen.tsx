@@ -172,9 +172,9 @@ export default function HomeScreen() {
           {item.script}
         </Text>
         <View style={styles.recordingMetaContainer}>
-          <Text style={styles.recordingMeta}>{formatDuration(item.duration)}</Text>
+          <Text style={styles.recordingMeta}>录音时长: {formatDuration(item.duration)}</Text>
           <Text style={styles.recordingMetaSeparator}>-</Text>
-          <Text style={styles.recordingMeta}>{item.playCount}次播放</Text>
+          <Text style={styles.recordingMeta}>播放次数: {item.playCount}次</Text>
         </View>
       </View>
 
@@ -375,12 +375,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     minHeight: 80,
+    borderRadius: 8,
+    color: Colors.light.text,
+    backgroundColor: Colors.light.background,
   },
   iconContainer: {
     width: 48,
     height: 56,
     borderRadius: 8,
-    backgroundColor: Colors.light.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
   },

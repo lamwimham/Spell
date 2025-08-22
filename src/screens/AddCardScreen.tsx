@@ -83,7 +83,7 @@ interface VoiceTypeOption {
 
 /**
  * 添加新卡片页面
- * 基于设计稿实现的咒语文稿添加页面
+ * 基于设计稿实现的咒语咒语添加页面
  */
 export function AddCardScreen() {
   const navigation = useNavigation();

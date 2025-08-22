@@ -248,7 +248,6 @@ const useAudioKit = (): AudioKitHook => {
       // 设置播放进度监听器
       AudioRecorderPlayer.addPlayBackListener(e => {
         // 检查是否播放完成
-        console.log('检查是否播放完成:', e);
         if (e.currentPosition >= e.duration) {
           if (isLooping.current) {
             // 循环播放
@@ -293,6 +292,7 @@ const useAudioKit = (): AudioKitHook => {
       setAudioState(prev => ({
         ...prev,
         isPaused: true,
+        isPlaying: false,
       }));
 
       return result;
@@ -303,7 +303,7 @@ const useAudioKit = (): AudioKitHook => {
   };
 
   const resumePlaying = async (): Promise<string> => {
-    if (!audioState.isPlaying || !audioState.isPaused) {
+    if (audioState.isPlaying || !audioState.isPaused) {
       throw new Error('当前没有暂停的播放');
     }
 
@@ -313,6 +313,7 @@ const useAudioKit = (): AudioKitHook => {
       setAudioState(prev => ({
         ...prev,
         isPaused: false,
+        isPlaying: true,
       }));
 
       return result;

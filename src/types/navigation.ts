@@ -17,4 +17,5 @@ export type RootStackParamList = {
   AudioKitExample: undefined;
   ClockIn: undefined;
   Reminder: undefined;
+  ThemeExample: undefined;
 };
