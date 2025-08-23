@@ -18,4 +18,14 @@ export type RootStackParamList = {
   ClockIn: undefined;
   Reminder: undefined;
   ThemeExample: undefined;
+
+  // 用户认证相关页面
+  Login: undefined;
+  Register: undefined;
+
+  // 用户管理相关页面
+  Profile: undefined;
+  UsageStats: undefined;
+  QuotaManagement: undefined;
+  Checkin: undefined;
 };

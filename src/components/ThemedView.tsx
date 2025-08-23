@@ -21,7 +21,7 @@ export const ThemedView: React.FC<ThemedViewProps> = ({
   ...props
 }) => {
   const theme = useTheme();
-  
+
   // 根据变体确定背景色
   let backgroundColor;
   switch (variant) {
@@ -37,29 +37,31 @@ export const ThemedView: React.FC<ThemedViewProps> = ({
     default:
       backgroundColor = theme.colors.background;
   }
-  
+
   // 确定边框圆角
   let borderRadiusValue = 0;
   if (borderRadius !== 'none') {
     borderRadiusValue = theme.spacing.borderRadius[borderRadius];
   }
-  
+
   // 确定阴影样式
   let shadowStyle = {};
   if (useShadow !== 'none') {
     shadowStyle = theme.shadows[useShadow];
   }
-  
+
   return (
     <View
-      style={[
-        { 
-          backgroundColor,
-          borderRadius: borderRadiusValue,
-        },
-        shadowStyle,
-        style,
-      ] as ViewStyle[]}
+      style={
+        [
+          {
+            backgroundColor,
+            borderRadius: borderRadiusValue,
+          },
+          shadowStyle,
+          style,
+        ] as ViewStyle[]
+      }
       {...props}
     >
       {children}

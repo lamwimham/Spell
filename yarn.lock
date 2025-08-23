@@ -2120,6 +2120,11 @@
   dependencies:
     "@babel/types" "^7.28.2"
 
+"@types/crypto-js@^4.2.2":
+  "integrity" "sha512-sDOLlVbHhXpAUAL0YHDUUwDZf3iN4Bwi4W6a0W0b+QcAezUbRtH4FVb+9J4h+XFPW7l/gQ9F8qC7P+Ec4k8QVQ=="
+  "resolved" "https://registry.npmmirror.com/@types/crypto-js/-/crypto-js-4.2.2.tgz"
+  "version" "4.2.2"
+
 "@types/graceful-fs@^4.1.3":
   "integrity" "sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ=="
   "resolved" "https://registry.npmmirror.com/@types/graceful-fs/-/graceful-fs-4.1.9.tgz"
@@ -3212,6 +3217,11 @@
     "path-key" "^3.1.0"
     "shebang-command" "^2.0.0"
     "which" "^2.0.1"
+
+"crypto-js@^4.2.0":
+  "integrity" "sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q=="
+  "resolved" "https://registry.npmmirror.com/crypto-js/-/crypto-js-4.2.0.tgz"
+  "version" "4.2.0"
 
 "css-select@^5.1.0":
   "integrity" "sha512-TizTzUddG/xYLA3NXodFM0fSbNizXjOKhqiQQwvhlspadZokn1KDy0NZFS0wuEubIYAV5/c1/lAr0TaaFXEXzw=="

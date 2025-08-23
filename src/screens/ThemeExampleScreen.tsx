@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  StyleSheet, 
-  ScrollView, 
-  View, 
-  // Switch, 
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  // Switch,
   // Text,
   // Dimensions
 } from 'react-native';
@@ -29,14 +29,14 @@ export default function ThemeExampleScreen() {
   // const [isEnabled, setIsEnabled] = useState(false);
   // const screenWidth = Dimensions.get('window').width;
   // const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-  
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <StatusBar 
-        barStyle={theme.isDark ? 'light-content' : 'dark-content'} 
+      <StatusBar
+        barStyle={theme.isDark ? 'light-content' : 'dark-content'}
         backgroundColor={theme.colors.background}
       />
-      
+
       {/* 顶部导航栏 - 固定在顶部 */}
       <View style={[styles.header, { backgroundColor: theme.colors.backgroundElevated }]}>
         <ThemedButton
@@ -46,13 +46,15 @@ export default function ThemeExampleScreen() {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         />
-        <ThemedText variant="h3" align="center">主题系统示例</ThemedText>
+        <ThemedText variant="h3" align="center">
+          主题系统示例
+        </ThemedText>
         <View style={{ width: 40 }} />
       </View>
-      
+
       {/* 内容区域 - 添加paddingTop避免被header遮挡 */}
-      <ScrollView 
-        style={[styles.container, { marginTop: 0 }]} 
+      <ScrollView
+        style={[styles.container, { marginTop: 0 }]}
         contentContainerStyle={[styles.content, { paddingTop: 8 }]}
         showsVerticalScrollIndicator={false}
       >
@@ -75,14 +77,18 @@ export default function ThemeExampleScreen() {
             <ColorSwatch name="错误色" color={theme.colors.error} />
           </View>
         </ThemedView> */}
-        
+
         {/* 排版系统展示 */}
         <ThemedView style={styles.section}>
           <ThemedText variant="h2">排版系统</ThemedText>
-          <ThemedText variant="body2" color={theme.colors.textSecondary} style={styles.sectionDescription}>
+          <ThemedText
+            variant="body2"
+            color={theme.colors.textSecondary}
+            style={styles.sectionDescription}
+          >
             一致的文本层级和样式系统
           </ThemedText>
-          
+
           <View style={styles.typographyShowcase}>
             <ThemedText variant="h1">标题一 (H1)</ThemedText>
             <ThemedText variant="h2">标题二 (H2)</ThemedText>
@@ -100,7 +106,7 @@ export default function ThemeExampleScreen() {
             <ThemedText variant="button">按钮文本 (Button)</ThemedText>
           </View>
         </ThemedView>
-        
+
         {/* 间距系统展示 */}
         {/* <ThemedView style={styles.section}>
           <ThemedText variant="h2">间距系统</ThemedText>
@@ -116,10 +122,9 @@ export default function ThemeExampleScreen() {
             <SpacingBlock size="xl" label="特大间距 (32px)" theme={theme} />
           </View>
         </ThemedView> */}
-        
+
         {/* 组件展示 */}
 
-        
         {/* 响应式设计展示 */}
         {/* <ThemedView style={styles.section}>
           <ThemedText variant="h2">响应式设计</ThemedText>
@@ -174,7 +179,7 @@ export default function ThemeExampleScreen() {
 // 颜色样本组件 - 当前未使用，保留用于未来功能
 // const ColorSwatch = ({ name, color }) => {
 //   const theme = useTheme();
-//   
+//
 //   // 计算文本颜色 (深色背景用浅色文本，浅色背景用深色文本)
 //   const getTextColor = (bgColor) => {
 //     // 简单的亮度计算
@@ -184,9 +189,9 @@ export default function ThemeExampleScreen() {
 //     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
 //     return brightness > 128 ? '#000000' : '#FFFFFF';
 //   };
-//   
+//
 //   const textColor = getTextColor(color);
-//   
+//
 //   return (
 //     <View style={styles.colorSwatch}>
 //       <View style={[styles.colorBox, { backgroundColor: color }]}>
@@ -200,7 +205,7 @@ export default function ThemeExampleScreen() {
 // 间距块组件 - 当前未使用，保留用于未来功能
 // const SpacingBlock = ({ size, label, theme }) => {
 //   const blockSize = theme.spacing[size];
-//   
+//
 //   return (
 //     <View style={styles.spacingBlock}>
 //       <View style={styles.spacingVisual}>

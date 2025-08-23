@@ -1,12 +1,12 @@
 import React from 'react';
-import { 
-  TouchableOpacity, 
-  Text, 
-  StyleSheet, 
+import {
+  TouchableOpacity,
+  Text,
+  // StyleSheet,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-  TouchableOpacityProps
+  TouchableOpacityProps,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 
@@ -39,7 +39,7 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
   ...props
 }) => {
   const theme = useTheme();
-  
+
   // 根据变体确定按钮样式
   const getButtonStyles = (): ViewStyle => {
     const baseStyle: ViewStyle = {
@@ -48,7 +48,7 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
       alignItems: 'center',
       flexDirection: 'row',
     };
-    
+
     // 根据尺寸设置内边距
     switch (size) {
       case 'small':
@@ -63,7 +63,7 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
         baseStyle.paddingVertical = theme.spacing.sm;
         baseStyle.paddingHorizontal = theme.spacing.md;
     }
-    
+
     // 根据变体设置颜色和边框
     switch (variant) {
       case 'secondary':
@@ -82,29 +82,29 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
         // 添加阴影
         Object.assign(baseStyle, theme.shadows.light);
     }
-    
+
     // 如果禁用，应用禁用样式
     if (disabled) {
       baseStyle.opacity = 0.5;
     }
-    
+
     // 如果是全宽按钮
     if (fullWidth) {
       baseStyle.width = '100%';
     }
-    
+
     return baseStyle;
   };
-  
+
   // 根据变体确定文本样式
   const getTextStyles = (): TextStyle => {
     const baseTextStyle: TextStyle = {
-      fontFamily: theme.typography.fontFamily.base,
+      fontFamily: theme.typography.fontFamily.primary,
       fontSize: theme.typography.sizes.base,
       fontWeight: theme.typography.weights.medium as TextStyle['fontWeight'],
       textAlign: 'center',
     };
-    
+
     // 根据尺寸调整字体大小
     switch (size) {
       case 'small':
@@ -114,7 +114,7 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
         baseTextStyle.fontSize = theme.typography.sizes.md;
         break;
     }
-    
+
     // 根据变体设置文本颜色
     switch (variant) {
       case 'secondary':
@@ -127,13 +127,13 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
       default: // primary
         baseTextStyle.color = theme.colors.buttonText;
     }
-    
+
     return baseTextStyle;
   };
-  
+
   // 计算图标与文本之间的间距
   const iconSpacing = size === 'small' ? theme.spacing.xs : theme.spacing.sm;
-  
+
   return (
     <TouchableOpacity
       style={[getButtonStyles(), style]}
@@ -142,15 +142,25 @@ export const ThemedButton: React.FC<ThemedButtonProps> = ({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator 
-          size={size === 'small' ? 'small' : 'small'} 
-          color={variant === 'primary' ? theme.colors.buttonText : theme.colors.primary} 
+        <ActivityIndicator
+          size={size === 'small' ? 'small' : 'small'}
+          color={variant === 'primary' ? theme.colors.buttonText : theme.colors.primary}
         />
       ) : (
         <>
-          {leftIcon && <React.Fragment>{leftIcon}<RNView style={{width: iconSpacing}} /></React.Fragment>}
+          {leftIcon && (
+            <React.Fragment>
+              {leftIcon}
+              <RNView style={{ width: iconSpacing }} />
+            </React.Fragment>
+          )}
           <Text style={[getTextStyles(), textStyle]}>{label}</Text>
-          {rightIcon && <React.Fragment><RNView style={{width: iconSpacing}} />{rightIcon}</React.Fragment>}
+          {rightIcon && (
+            <React.Fragment>
+              <RNView style={{ width: iconSpacing }} />
+              {rightIcon}
+            </React.Fragment>
+          )}
         </>
       )}
     </TouchableOpacity>

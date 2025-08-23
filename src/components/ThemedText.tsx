@@ -21,20 +21,16 @@ export const ThemedText: React.FC<ThemedTextProps> = ({
   ...props
 }) => {
   const theme = useTheme();
-  
+
   // 获取变体样式
   const variantStyle = theme.textStyles[variant];
-  
+
   // 确定文本颜色
   const textColor = color || theme.colors.text;
-  
+
   return (
     <Text
-      style={[
-        variantStyle,
-        { color: textColor, textAlign: align },
-        style,
-      ] as TextStyle[]}
+      style={[variantStyle, { color: textColor, textAlign: align }, style] as TextStyle[]}
       {...props}
     >
       {children}
