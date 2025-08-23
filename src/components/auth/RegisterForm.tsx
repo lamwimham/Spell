@@ -24,7 +24,7 @@ interface RegisterFormProps {
 const RegisterForm: React.FC<RegisterFormProps> = ({
   onSuccess,
   onSwitchToLogin,
-  allowRoleSelection = false,
+  allowRoleSelection: _allowRoleSelection = false,
 }) => {
   const { register, isRegistering, error, clearAuthError } = useAuth();
   const { colors, textStyles, spacing } = useTheme();

@@ -3,7 +3,6 @@
  * 提供完整的数据备份、恢复和迁移功能，支持加密和压缩
  */
 
-import { Q } from '@nozbe/watermelondb';
 import database from '../../database/index';
 import { UserRepository } from '../../database/repositories/UserRepository';
 import { CheckInRepository } from '../../database/repositories/CheckInRepository';
@@ -728,7 +727,7 @@ export class DataService {
    */
   private static async importCheckInRecord(
     record: any,
-    config: ImportConfig,
+    _config: ImportConfig,
   ): Promise<'imported' | 'skipped'> {
     try {
       const existingRecord = await CheckInRepository.getById(record.id);
@@ -749,7 +748,7 @@ export class DataService {
    */
   private static async importAiUsageRecord(
     record: any,
-    config: ImportConfig,
+    _config: ImportConfig,
   ): Promise<'imported' | 'skipped'> {
     try {
       const existingRecord = await AiUsageRepository.getById(record.id);
@@ -770,7 +769,7 @@ export class DataService {
    */
   private static async importQuotaRecord(
     record: any,
-    config: ImportConfig,
+    _config: ImportConfig,
   ): Promise<'imported' | 'skipped'> {
     try {
       const existingRecord = await UserQuotaRepository.getById(record.id);

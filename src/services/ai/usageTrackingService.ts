@@ -6,7 +6,7 @@
 import { AiUsageRepository } from '../../database/repositories/AiUsageRepository';
 import { UserQuotaRepository } from '../../database/repositories/UserQuotaRepository';
 import { AiServiceType, CallStatus } from '../../database/models/AiUsageLog';
-import { QuotaType, ResetPeriod } from '../../database/models/UserQuota';
+import { ResetPeriod } from '../../database/models/UserQuota';
 
 // AI调用记录数据类型
 export interface AiCallRecord {
@@ -232,8 +232,8 @@ export class UsageTrackingService {
           record.costEstimate,
         );
       }
-    } catch (error) {
-      console.error('记录使用情况失败:', error);
+    } catch (_error) {
+      console.error('记录使用情况失败:');
       // 不抛出错误，避免影响主要业务流程
     }
   }
@@ -241,30 +241,30 @@ export class UsageTrackingService {
   /**
    * 获取用户使用统计
    */
-  static async getUserUsageStats(userId: string, days: number = 30) {
-    return await AiUsageRepository.getUserStats(userId, days);
+  static async getUserUsageStats(userId: string, _days: number = 30) {
+    return await AiUsageRepository.getUserStats(userId, _days);
   }
 
   /**
    * 获取用户各服务使用统计
    */
-  static async getUserServiceStats(userId: string, days: number = 30) {
-    return await AiUsageRepository.getUserServiceStats(userId, days);
+  static async getUserServiceStats(userId: string, _days: number = 30) {
+    return await AiUsageRepository.getUserServiceStats(userId, _days);
   }
 
   /**
    * 获取用户今日使用概览
    */
-  static async getTodayUsageOverview(userId: string) {
+  static async getTodayUsageOverview(_userId: string) {
     const user = await import('../../database/repositories/UserRepository').then(module =>
-      module.UserRepository.getById(userId),
+      module.UserRepository.getById(_userId),
     );
 
     if (!user) {
       throw new Error('用户不存在');
     }
 
-    const todayUsage = await AiUsageRepository.getTodayUsage(userId);
+    const todayUsage = await AiUsageRepository.getTodayUsage(_userId);
     const limits = DEFAULT_LIMITS[user.role] || DEFAULT_LIMITS.user;
 
     return {
@@ -295,8 +295,8 @@ export class UsageTrackingService {
   /**
    * 计算AI服务调用成本
    */
-  static calculateCost(serviceType: AiServiceType, tokens: number): number {
-    const pricePerThousand = SERVICE_PRICING[serviceType] || SERVICE_PRICING.qwen;
+  static calculateCost(_serviceType: AiServiceType, tokens: number): number {
+    const pricePerThousand = SERVICE_PRICING[_serviceType] || SERVICE_PRICING.qwen;
     return Math.ceil((tokens / 1000) * pricePerThousand);
   }
 
@@ -330,7 +330,6 @@ export class UsageTrackingService {
 
         // 获取当前使用量
         let currentUsage = 0;
-        const now = Date.now();
 
         if (quota.resetPeriod === 'daily') {
           const todayStart = new Date();
@@ -401,17 +400,17 @@ export class UsageTrackingService {
    * 更新配额使用量
    */
   private static async updateQuotaUsage(
-    userId: string,
-    serviceType: AiServiceType,
-    tokens: number,
-    cost: number,
+    _userId: string,
+    _serviceType: AiServiceType,
+    _tokens: number,
+    _cost: number,
   ): Promise<void> {
     try {
       // 这里可以实现配额使用量的更新逻辑
       // 目前通过AiUsageRepository已经记录了使用情况
       // 可以考虑在UserQuota表中维护实时使用量缓存以提高性能
-    } catch (error) {
-      console.error('更新配额使用量失败:', error);
+    } catch (_error) {
+      console.error('更新配额使用量失败:');
     }
   }
 
@@ -450,15 +449,15 @@ export class UsageTrackingService {
       // 这个方法可以由定时任务调用，重置过期的配额
       // 实现逻辑根据具体需求可以进一步完善
       console.log('重置过期配额...');
-    } catch (error) {
-      console.error('重置过期配额失败:', error);
+    } catch (_error) {
+      console.error('重置过期配额失败:');
     }
   }
 
   /**
    * 清理旧的使用记录
    */
-  static async cleanupOldRecords(days: number = 90): Promise<number> {
-    return await AiUsageRepository.cleanupOldLogs(days);
+  static async cleanupOldRecords(_days: number = 90): Promise<number> {
+    return await AiUsageRepository.cleanupOldLogs(_days);
   }
 }

@@ -7,7 +7,9 @@ import 'react-native-gesture-handler/jestSetup';
 
 // Mock React Native modules
 jest.mock('react-native-reanimated', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const Reanimated = require('react-native-reanimated/mock');
+  // @ts-expect-error: Mocking the call method for testing purposes
   Reanimated.default.call = () => {};
   return Reanimated;
 });

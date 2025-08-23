@@ -7,7 +7,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { PasswordService } from '../../services/auth/passwordService';
 import InputText from '../ui/InputText';
 import Button from '../ui/Button';
 import ToggleSwitch from '../ui/ToggleSwitch';
@@ -30,7 +29,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   showForgotPassword = true,
 }) => {
   const { login, isLoggingIn, error, clearAuthError, lastLoginUsername } = useAuth();
-  const { colors, textStyles, spacing, shadows } = useTheme();
+  const { colors, textStyles, spacing } = useTheme();
 
   // 表单状态
   const [username, setUsername] = useState(lastLoginUsername || '');

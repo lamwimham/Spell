@@ -284,11 +284,6 @@ const CheckinHistory: React.FC<CheckinHistoryProps> = ({
     setSelectedType(filterType);
   };
 
-  // 时间筛选
-  const handleDateFilter = (filter: 'all' | 'week' | 'month') => {
-    setDateFilter(filter);
-  };
-
   // 渲染筛选器
   const renderFilters = () => {
     if (!showFilters) return null;
@@ -307,8 +302,14 @@ const CheckinHistory: React.FC<CheckinHistoryProps> = ({
       { key: 'month' as const, label: '最近一月' },
     ];
 
+    // 时间筛选
+    const handleDateFilter = (filter: 'all' | 'week' | 'month') => {
+      setDateFilter(filter);
+    };
+
     return (
       <View style={styles.filterContainer}>
+        {/* 类型筛选 */}
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -331,6 +332,30 @@ const CheckinHistory: React.FC<CheckinHistoryProps> = ({
           )}
           ItemSeparatorComponent={() => <View style={{ width: spacing.sm }} />}
         />
+
+        {/* 时间筛选 */}
+        <View style={{ flexDirection: 'row', marginTop: spacing.sm }}>
+          {dateFilters.map(filter => (
+            <TouchableOpacity
+              key={filter.key}
+              style={[
+                styles.filterButton,
+                dateFilter === filter.key && styles.filterButtonActive,
+                { marginRight: spacing.sm },
+              ]}
+              onPress={() => handleDateFilter(filter.key)}
+            >
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  dateFilter === filter.key && styles.filterButtonTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     );
   };

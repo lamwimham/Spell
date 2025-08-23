@@ -1,32 +1,17 @@
 /**
- * 打卡统计组件 - 显示用户打卡数据分析和可视化统计
- * 包括连续天数、成就徽章、日历视图和趋势分析
+ * 打卡统计组件 - 显示用户打卡统计信息、成就和日历视图
+ * 提供完整的统计数据展示和可视化功能
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { CheckInService, CheckInType, CheckInStats } from '../../services/checkin/checkinService';
-
-const { width: screenWidth } = Dimensions.get('window');
-
-// 组件属性接口
-interface CheckinStatsProps {
-  type?: CheckInType;
-  showCalendar?: boolean;
-  showAchievements?: boolean;
-  showLeaderboard?: boolean;
-  onStatsUpdate?: (stats: CheckInStats) => void;
-}
+import {
+  CheckInService,
+  CheckInType,
+  CheckInStats as CheckInStatsType,
+} from '../../services/checkin/checkinService';
 
 // 成就数据类型
 interface Achievement {
@@ -36,6 +21,14 @@ interface Achievement {
   progress?: number;
 }
 
+// 组件属性接口
+interface CheckinStatsProps {
+  type?: CheckInType;
+  showCalendar?: boolean;
+  showAchievements?: boolean;
+  onStatsUpdate?: (stats: CheckInStatsType) => void;
+}
+
 /**
  * 打卡统计组件
  */
@@ -43,14 +36,13 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
   type = 'daily',
   showCalendar = true,
   showAchievements = true,
-  showLeaderboard = false,
   onStatsUpdate,
 }) => {
   const { colors, textStyles, spacing } = useTheme();
   const { session, isAuthenticated } = useAuth();
 
   // 状态管理
-  const [stats, setStats] = useState<CheckInStats | null>(null);
+  const [stats, setStats] = useState<CheckInStatsType | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [calendarData, setCalendarData] = useState<Record<string, boolean>>({});
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -58,20 +50,28 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  // 样式
+  // 样式定义
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
     scrollContent: {
-      padding: spacing.md,
-      gap: spacing.lg,
+      padding: spacing.lg,
+      gap: spacing.xl,
     },
     section: {
       backgroundColor: colors.backgroundElevated,
       borderRadius: spacing.md,
       padding: spacing.md,
+      ...{
+        // 添加阴影效果
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+      },
     },
     sectionTitle: {
       ...textStyles.h3,
@@ -85,13 +85,11 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     },
     statCard: {
       flex: 1,
-      minWidth: (screenWidth - spacing.md * 4) / 2,
+      minWidth: 100,
       backgroundColor: colors.background,
       borderRadius: spacing.sm,
       padding: spacing.md,
       alignItems: 'center',
-      borderWidth: 1,
-      borderColor: colors.border,
     },
     statNumber: {
       ...textStyles.h2,
@@ -102,32 +100,8 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     statLabel: {
       ...textStyles.caption,
       color: colors.textSecondary,
-      textAlign: 'center',
     },
-    streakCard: {
-      backgroundColor: colors.primary + '15',
-      borderRadius: spacing.md,
-      padding: spacing.lg,
-      alignItems: 'center',
-      marginBottom: spacing.md,
-    },
-    streakNumber: {
-      ...textStyles.h1,
-      color: colors.primary,
-      fontWeight: '800',
-      marginBottom: spacing.xs,
-    },
-    streakLabel: {
-      ...textStyles.body1,
-      color: colors.primary,
-      fontWeight: '600',
-    },
-    streakSubLabel: {
-      ...textStyles.caption,
-      color: colors.textSecondary,
-      marginTop: spacing.xs,
-    },
-    achievementsContainer: {
+    achievementList: {
       gap: spacing.sm,
     },
     achievementItem: {
@@ -136,29 +110,12 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
       padding: spacing.md,
       backgroundColor: colors.background,
       borderRadius: spacing.sm,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    achievementItemAchieved: {
-      backgroundColor: colors.success + '15',
-      borderColor: colors.success,
     },
     achievementIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
+      fontSize: 20,
       marginRight: spacing.md,
-    },
-    achievementIconAchieved: {
-      backgroundColor: colors.success,
-    },
-    achievementIconNotAchieved: {
-      backgroundColor: colors.border,
-    },
-    achievementIconText: {
-      fontSize: 18,
+      width: 24,
+      textAlign: 'center',
     },
     achievementContent: {
       flex: 1,
@@ -167,82 +124,12 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
       ...textStyles.body1,
       color: colors.text,
       fontWeight: '600',
-      marginBottom: spacing.xs,
     },
     achievementDescription: {
-      ...textStyles.body2,
+      ...textStyles.caption,
       color: colors.textSecondary,
     },
-    progressBar: {
-      height: 4,
-      backgroundColor: colors.border,
-      borderRadius: 2,
-      marginTop: spacing.sm,
-      overflow: 'hidden',
-    },
-    progressFill: {
-      height: '100%',
-      backgroundColor: colors.primary,
-      borderRadius: 2,
-    },
-    calendarContainer: {
-      gap: spacing.sm,
-    },
-    calendarHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: spacing.md,
-    },
-    calendarNavButton: {
-      padding: spacing.sm,
-      borderRadius: spacing.sm,
-      backgroundColor: colors.background,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    calendarNavText: {
-      ...textStyles.button,
-      color: colors.primary,
-    },
-    calendarMonth: {
-      ...textStyles.h3,
-      color: colors.text,
-    },
-    calendarGrid: {
-      gap: spacing.xs,
-    },
-    calendarWeek: {
-      flexDirection: 'row',
-      gap: spacing.xs,
-    },
-    calendarDay: {
-      flex: 1,
-      aspectRatio: 1,
-      borderRadius: spacing.sm,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.background,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    calendarDayChecked: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    calendarDayToday: {
-      backgroundColor: colors.secondary + '30',
-      borderColor: colors.secondary,
-    },
-    calendarDayText: {
-      ...textStyles.caption,
-      color: colors.text,
-    },
-    calendarDayTextChecked: {
-      color: colors.background,
-      fontWeight: '600',
-    },
-    suggestionContainer: {
+    suggestionList: {
       gap: spacing.sm,
     },
     suggestionItem: {
@@ -255,6 +142,72 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     suggestionText: {
       ...textStyles.body2,
       color: colors.text,
+    },
+    calendarContainer: {
+      gap: spacing.md,
+    },
+    calendarHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    calendarNavButton: {
+      padding: spacing.sm,
+      minWidth: 40,
+      alignItems: 'center',
+    },
+    calendarNavText: {
+      ...textStyles.h3,
+      color: colors.text,
+    },
+    calendarMonth: {
+      ...textStyles.h3,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    calendarGrid: {
+      gap: spacing.xs,
+    },
+    calendarWeek: {
+      flexDirection: 'row',
+    },
+    calendarDay: {
+      flex: 1,
+      aspectRatio: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: spacing.sm,
+      backgroundColor: colors.background,
+    },
+    calendarDayChecked: {
+      backgroundColor: colors.primary,
+    },
+    calendarDayToday: {
+      backgroundColor: colors.primary + '30',
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    calendarDayText: {
+      ...textStyles.caption,
+      color: colors.text,
+    },
+    calendarDayTextChecked: {
+      color: colors.background,
+      fontWeight: '600',
+    },
+    calendarDayHeader: {
+      backgroundColor: 'transparent',
+    },
+    calendarDayHeaderWeekday: {
+      fontWeight: '600',
+    },
+    calendarDayNotCurrentMonth: {
+      opacity: 0.3,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 
@@ -309,32 +262,21 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
   const renderStatsCards = () => {
     if (!stats) return null;
 
-    const statsData = [
-      { label: '总打卡天数', value: stats.totalDays, suffix: '天' },
-      { label: '最长连续', value: stats.longestStreak, suffix: '天' },
-      { label: '本周打卡', value: stats.thisWeekDays, suffix: '天' },
-      { label: '本月打卡', value: stats.thisMonthDays, suffix: '天' },
+    const statItems = [
+      { label: '连续天数', value: stats.currentStreak },
+      { label: '最长连续', value: stats.longestStreak },
+      { label: '总打卡', value: stats.totalDays },
+      { label: '本周', value: stats.thisWeekDays },
+      { label: '本月', value: stats.thisMonthDays },
     ];
 
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>打卡概览</Text>
-
-        {/* 当前连续天数高亮显示 */}
-        <View style={styles.streakCard}>
-          <Text style={styles.streakNumber}>{stats.currentStreak}</Text>
-          <Text style={styles.streakLabel}>连续打卡天数</Text>
-          {stats.todayCheckedIn && <Text style={styles.streakSubLabel}>今日已打卡 ✓</Text>}
-        </View>
-
-        {/* 统计网格 */}
+        <Text style={styles.sectionTitle}>统计概览</Text>
         <View style={styles.statsGrid}>
-          {statsData.map((item, index) => (
+          {statItems.map((item, index) => (
             <View key={index} style={styles.statCard}>
-              <Text style={styles.statNumber}>
-                {item.value}
-                <Text style={[styles.statNumber, { fontSize: 16 }]}>{item.suffix}</Text>
-              </Text>
+              <Text style={styles.statNumber}>{item.value}</Text>
               <Text style={styles.statLabel}>{item.label}</Text>
             </View>
           ))}
@@ -343,48 +285,39 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     );
   };
 
-  // 渲染成就徽章
+  // 渲染成就列表
   const renderAchievements = () => {
     if (!showAchievements || achievements.length === 0) return null;
 
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>成就徽章</Text>
-        <View style={styles.achievementsContainer}>
+        <Text style={styles.sectionTitle}>成就</Text>
+        <View style={styles.achievementList}>
           {achievements.map((achievement, index) => (
-            <View
-              key={index}
-              style={[
-                styles.achievementItem,
-                achievement.achieved && styles.achievementItemAchieved,
-              ]}
-            >
-              <View
-                style={[
-                  styles.achievementIcon,
-                  achievement.achieved
-                    ? styles.achievementIconAchieved
-                    : styles.achievementIconNotAchieved,
-                ]}
-              >
-                <Text style={styles.achievementIconText}>{achievement.achieved ? '🏆' : '⭕'}</Text>
-              </View>
-
+            <View key={index} style={styles.achievementItem}>
+              <Text style={styles.achievementIcon}>{achievement.achieved ? '🏆' : '⭕'}</Text>
               <View style={styles.achievementContent}>
                 <Text style={styles.achievementTitle}>{achievement.title}</Text>
                 <Text style={styles.achievementDescription}>{achievement.description}</Text>
-
-                {!achievement.achieved && achievement.progress !== undefined && (
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        { width: `${Math.min(achievement.progress, 100)}%` },
-                      ]}
-                    />
-                  </View>
-                )}
               </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  // 渲染建议列表
+  const renderSuggestions = () => {
+    if (suggestions.length === 0) return null;
+
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>建议</Text>
+        <View style={styles.suggestionList}>
+          {suggestions.map((suggestion, index) => (
+            <View key={index} style={styles.suggestionItem}>
+              <Text style={styles.suggestionText}>{suggestion}</Text>
             </View>
           ))}
         </View>
@@ -399,6 +332,7 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     const year = selectedMonth.getFullYear();
     const month = selectedMonth.getMonth();
     const today = new Date();
+    const todayString = today.toDateString();
 
     // 获取月份第一天和最后一天
     const firstDay = new Date(year, month, 1);
@@ -416,10 +350,11 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     }> = [];
 
     // 添加上个月的尾部天数
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
-      const prevDate = new Date(firstDay.getTime() - (i + 1) * 24 * 60 * 60 * 1000);
+      const date = prevMonthLastDay - i;
       calendarDays.push({
-        date: prevDate.getDate(),
+        date,
         isCurrentMonth: false,
         isToday: false,
         isChecked: false,
@@ -429,8 +364,9 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     // 添加当月的天数
     for (let date = 1; date <= lastDay.getDate(); date++) {
       const currentDate = new Date(year, month, date);
+      const dateString = currentDate.toDateString();
       const dateKey = currentDate.toISOString().split('T')[0];
-      const isToday = currentDate.toDateString() === today.toDateString();
+      const isToday = dateString === todayString;
       const isChecked = calendarData[dateKey] || false;
 
       calendarDays.push({
@@ -443,9 +379,9 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
 
     // 补齐到完整的6周
     const remainingDays = 42 - calendarDays.length;
-    for (let date = 1; date <= remainingDays; date++) {
+    for (let i = 1; i <= remainingDays; i++) {
       calendarDays.push({
-        date,
+        date: i,
         isCurrentMonth: false,
         isToday: false,
         isChecked: false,
@@ -467,6 +403,9 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
       }
       setSelectedMonth(newMonth);
     };
+
+    // 星期标题
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
 
     return (
       <View style={styles.section}>
@@ -497,13 +436,22 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
             </TouchableOpacity>
           </View>
 
+          {/* 星期标题 */}
+          <View style={styles.calendarWeek}>
+            {weekdays.map((day, index) => (
+              <View key={index} style={[styles.calendarDay, styles.calendarDayHeader]}>
+                <Text style={[styles.calendarDayText, styles.calendarDayHeaderWeekday]}>{day}</Text>
+              </View>
+            ))}
+          </View>
+
           {/* 日历网格 */}
           <View style={styles.calendarGrid}>
             {weeks.map((week, weekIndex) => (
               <View key={weekIndex} style={styles.calendarWeek}>
                 {week.map((day, dayIndex) => (
                   <View
-                    key={dayIndex}
+                    key={`${weekIndex}-${dayIndex}`}
                     style={[
                       styles.calendarDay,
                       day.isChecked && styles.calendarDayChecked,
@@ -514,7 +462,7 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
                       style={[
                         styles.calendarDayText,
                         day.isChecked && styles.calendarDayTextChecked,
-                        !day.isCurrentMonth && { opacity: 0.3 },
+                        !day.isCurrentMonth && styles.calendarDayNotCurrentMonth,
                       ]}
                     >
                       {day.date}
@@ -529,42 +477,31 @@ const CheckinStats: React.FC<CheckinStatsProps> = ({
     );
   };
 
-  // 渲染建议
-  const renderSuggestions = () => {
-    if (suggestions.length === 0) return null;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>打卡建议</Text>
-        <View style={styles.suggestionContainer}>
-          {suggestions.map((suggestion, index) => (
-            <View key={index} style={styles.suggestionItem}>
-              <Text style={styles.suggestionText}>{suggestion}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
   // 组件挂载时加载数据
   useEffect(() => {
     loadStats();
-  }, [loadStats]);
+    loadCalendarData();
+  }, [loadStats, loadCalendarData]);
 
-  // 加载日历数据
+  // 当月份或类型变化时重新加载日历数据
   useEffect(() => {
-    if (showCalendar) {
-      loadCalendarData();
-    }
-  }, [showCalendar, loadCalendarData]);
+    loadCalendarData();
+  }, [selectedMonth, type, loadCalendarData]);
 
   if (!isAuthenticated) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={styles.centerContainer}>
         <Text style={[textStyles.body1, { color: colors.textSecondary }]}>
           请先登录查看打卡统计
         </Text>
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={[textStyles.body1, { color: colors.textSecondary }]}>加载中...</Text>
       </View>
     );
   }

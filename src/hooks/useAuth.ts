@@ -13,7 +13,7 @@ import {
   refreshSession,
   changePassword,
   clearError,
-  selectAuth,
+  // selectAuth,
   selectIsAuthenticated,
   selectAuthLoading,
   selectAuthError,
@@ -40,7 +40,7 @@ export function useAuth() {
   const dispatch = useDispatch();
 
   // 选择器
-  const auth = useSelector(selectAuth);
+  // const auth = useSelector(selectAuth);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const isLoading = useSelector(selectAuthLoading);
   const error = useSelector(selectAuthError);
@@ -265,12 +265,12 @@ export function useUserSettings() {
   // 这里可以实现用户设置相关的逻辑
   // 目前作为预留接口
 
-  const getUserSetting = useCallback((key: string) => {
+  const getUserSetting = useCallback((_key: string) => {
     // TODO: 实现获取用户设置
     return null;
   }, []);
 
-  const setUserSetting = useCallback((key: string, value: any) => {
+  const setUserSetting = useCallback((_key: string, _value: any) => {
     // TODO: 实现设置用户设置
     return Promise.resolve();
   }, []);

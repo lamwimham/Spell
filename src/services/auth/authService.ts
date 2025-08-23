@@ -6,7 +6,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserRepository, UserData } from '../../database/repositories/UserRepository';
 import { UserQuotaRepository } from '../../database/repositories/UserQuotaRepository';
-import { PasswordService, PasswordValidationResult } from './passwordService';
+import { PasswordService } from './passwordService';
 import User, { UserStatus, UserRole } from '../../database/models/User';
 
 // 认证结果接口

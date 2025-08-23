@@ -14,7 +14,6 @@ import { QwenMessage } from '../services/qwen/types';
 import { DEFAULT_MODEL, DEFAULT_PARAMETERS } from '../services/qwen/config';
 import { ENV } from '../services/qwen/env';
 import { useAuth } from './useAuth';
-import { UsageTrackingService } from '../services/ai/usageTrackingService';
 
 // Hook配置选项
 interface UseQwenWithLimitsOptions {

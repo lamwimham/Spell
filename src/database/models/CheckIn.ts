@@ -87,6 +87,6 @@ export default class CheckIn extends Model {
 
     // 格式化为 MM-DD
     const [year, month, day] = this.date.split('-');
-    return `${month}-${day}`;
+    return `${year}-${month}-${day}`;
   }
 }

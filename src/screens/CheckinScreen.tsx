@@ -36,7 +36,6 @@ const CheckinScreen: React.FC = () => {
   const [selectedType, setSelectedType] = useState<CheckInType>('daily');
   const [stats, setStats] = useState<CheckInStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   // 样式
   const styles = StyleSheet.create({

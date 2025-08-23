@@ -46,11 +46,11 @@ class MockBlob {
     return new ReadableStream();
   }
 
-  text() {
+  text(_blob: any) {
     return Promise.resolve('');
   }
 
-  arrayBuffer() {
+  arrayBuffer(_blob: any) {
     return Promise.resolve(new ArrayBuffer(0));
   }
 }
@@ -84,7 +84,7 @@ class MockFileReader {
   onloadend: any = null;
   onprogress: any = null;
 
-  readAsText(blob: any) {
+  readAsText(_blob: any) {
     setTimeout(() => {
       this.readyState = 2;
       this.result = 'mock file content';
@@ -93,7 +93,7 @@ class MockFileReader {
     }, 0);
   }
 
-  readAsDataURL(blob: any) {
+  readAsDataURL(_blob: any) {
     setTimeout(() => {
       this.readyState = 2;
       this.result = 'data:text/plain;base64,bW9jayBmaWxlIGNvbnRlbnQ=';
@@ -102,7 +102,7 @@ class MockFileReader {
     }, 0);
   }
 
-  readAsArrayBuffer(blob: any) {
+  readAsArrayBuffer(_blob: any) {
     setTimeout(() => {
       this.readyState = 2;
       this.result = new ArrayBuffer(0);
@@ -252,6 +252,9 @@ class MockDate extends RealDate {
 
 // Uncomment the next line to use fixed dates in tests
 // global.Date = MockDate as any;
+
+// Export MockDate to avoid unused variable error
+export { MockDate };
 
 // Math.random polyfill for deterministic testing
 const originalRandom = Math.random;
