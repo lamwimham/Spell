@@ -8,8 +8,8 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import { InputText } from '../ui/InputText';
-import Button from '../ui/Button';
-import ToggleSwitch from '../ui/ToggleSwitch';
+import { Button } from '../ui/Button';
+import { ToggleSwitch } from '../ui/ToggleSwitch';
 
 // 登录表单属性接口
 interface LoginFormProps {
