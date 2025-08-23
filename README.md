@@ -1,4 +1,4 @@
-# SpellApp - React Native iOS 应用
+# Spell - React Native iOS 应用
 
 一个基于 React Native 的语音库管理应用，支持语音文件的播放、管理和存储。
 
@@ -35,7 +35,7 @@
 
 ```bash
 git clone <repository-url>
-cd SpellApp
+cd Spell
 ```
 
 ### 2. 安装依赖
@@ -54,12 +54,12 @@ cd ios && pod install && cd ..
 
 #### iOS 配置
 
-1. 打开 `ios/SpellApp.xcworkspace` (不是 .xcodeproj)
-2. 在 Xcode 中，右键点击项目名称，选择 "Add Files to SpellApp"
+1. 打开 `ios/Spell.xcworkspace` (不是 .xcodeproj)
+2. 在 Xcode 中，右键点击项目名称，选择 "Add Files to Spell"
 3. 导航到 `node_modules/react-native-vector-icons/Fonts`
 4. 选择所需的字体文件 (如 Ionicons.ttf)
 5. 确保 "Add to target" 选中了你的应用目标
-6. 在 `ios/SpellApp/Info.plist` 中添加字体：
+6. 在 `ios/Spell/Info.plist` 中添加字体：
 
 ```xml
 <key>UIAppFonts</key>
@@ -93,7 +93,7 @@ npm run android
 ## 📁 项目结构
 
 ```
-SpellApp/
+Spell/
 ├── src/
 │   ├── components/          # 可复用组件
 │   │   ├── ui/             # UI 组件库
@@ -162,7 +162,7 @@ const newSlice = createSlice({
 
 ## 🤖 通义千问 API 集成
 
-SpellApp 现在集成了通义千问 API，可以为应用提供强大的 AI 能力。
+Spell 现在集成了通义千问 API，可以为应用提供强大的 AI 能力。
 
 ### 安装和配置
 
@@ -462,7 +462,7 @@ npx react-native bundle --platform ios --dev false --entry-file index.js --bundl
 
 ## 💾 WatermelonDB 版本信息存储
 
-SpellApp 集成了 WatermelonDB 进行版本信息的本地持久化存储，支持离线版本检查和历史版本追踪。
+Spell 集成了 WatermelonDB 进行版本信息的本地持久化存储，支持离线版本检查和历史版本追踪。
 
 ### 核心功能
 

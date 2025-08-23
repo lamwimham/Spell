@@ -10,6 +10,7 @@ import AudioRecorderPlayer, {
 } from 'react-native-audio-recorder-player';
 import RNFS from 'react-native-fs';
 import { Platform } from 'react-native';
+import { FilePathManager } from '../utils/filePathManager';
 
 interface AudioState {
   isRecording: boolean;
@@ -122,6 +123,9 @@ const useAudioKit = (): AudioKitHook => {
       // 使用Documents目录确保文件持久化
       const recordingPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
 
+      // 存储相对路径文件名，而不是绝对路径
+      recordingUri.current = fileName; // 只存储文件名，不存储完整路径
+
       // 设置录音进度监听器
       AudioRecorderPlayer.addRecordBackListener(e => {
         setAudioState(prev => ({
@@ -133,7 +137,8 @@ const useAudioKit = (): AudioKitHook => {
 
       // 开始录音
       const uri = await AudioRecorderPlayer.startRecorder(recordingPath, audioSet, true);
-      recordingUri.current = uri;
+      // 保持recordingUri.current存储文件名，不是完整路径
+      // recordingUri.current = fileName; // 已经在上面设置了
 
       setAudioState(prev => ({
         ...prev,
@@ -241,9 +246,16 @@ const useAudioKit = (): AudioKitHook => {
     }
 
     try {
-      console.log('开始播放音频:', uri);
+      // 使用FilePathManager获取有效的文件路径
+      const validPath = await FilePathManager.getValidPath(uri);
+
+      if (!validPath) {
+        throw new Error(`录音文件不存在或已损坏: ${uri}`);
+      }
+
+      console.log('开始播放音频:', validPath);
       isLooping.current = looping;
-      playingUri.current = uri;
+      playingUri.current = validPath;
 
       // 设置播放进度监听器
       AudioRecorderPlayer.addPlayBackListener(e => {
@@ -266,7 +278,7 @@ const useAudioKit = (): AudioKitHook => {
         }));
       });
 
-      const result = await AudioRecorderPlayer.startPlayer(uri);
+      const result = await AudioRecorderPlayer.startPlayer(validPath);
 
       setAudioState(prev => ({
         ...prev,

@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SettingsPanel } from '../components/ui/SettingsPanel';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
+import { useTheme } from '../hooks/useTheme';
 
 /**
  * 设置页面
@@ -12,14 +13,20 @@ import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 export function SettingsScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { colors, textStyles, spacing, shadows, isDark } = useTheme();
 
   const handleSettingChange = (key: string, value: any) => {
     console.log(`Setting ${key} changed to:`, value);
   };
 
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View style={[dynamicStyles.container, { paddingTop: insets.top }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
 
       <TopNavigationBar
         title="Settings"
@@ -27,61 +34,29 @@ export function SettingsScreen() {
         onBackPress={() => navigation.goBack()}
       />
 
-      <View style={styles.content}>
-        <SettingsPanel onSettingChange={handleSettingChange} style={styles.panel} />
+      <View style={dynamicStyles.content}>
+        <SettingsPanel onSettingChange={handleSettingChange} style={dynamicStyles.panel} />
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E3F1',
-  },
-  backButton: {
-    padding: 8,
-    marginTop: 4,
-  },
-  headerContent: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontFamily: 'Rubik',
-    fontWeight: '600',
-    color: '#535059',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#7572B7',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  panel: {
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
+/**
+ * 创建动态样式的函数
+ */
+const createStyles = ({ colors, spacing, shadows }: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-});
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+    },
+    panel: {
+      ...shadows.medium,
+    },
+  });

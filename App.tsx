@@ -1,5 +1,5 @@
 /**
- * SpellApp - React Native iOS应用
+ * Spell - React Native iOS应用
  *
  * @format
  */

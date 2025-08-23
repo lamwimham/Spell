@@ -5,9 +5,11 @@ import AddReminderForm from '../components/AddReminderForm';
 import ReminderList from '../components/ReminderList';
 import { getReminders, saveReminders, Reminder } from '../services/storage/storageService';
 import { scheduleAllReminders } from '../services/notifications/scheduleManager';
+import { useTheme } from '../hooks/useTheme';
 
 export default function ReminderScreen() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const { colors, textStyles, spacing, shadows } = useTheme();
 
   useEffect(() => {
     loadReminders();
@@ -49,8 +51,10 @@ export default function ReminderScreen() {
     await scheduleAllReminders();
   };
 
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <ReminderList
         reminders={reminders}
         onToggle={handleToggleReminder}
@@ -62,9 +66,13 @@ export default function ReminderScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-});
+/**
+ * 创建动态样式的函数
+ */
+const createStyles = ({ colors }: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+  });

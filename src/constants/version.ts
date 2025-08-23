@@ -10,7 +10,7 @@ export const APP_STORE_URLS = {
 
 // 应用信息
 export const APP_INFO = {
-  name: 'SpellApp',
-  bundleId: 'com.spellapp', // iOS Bundle ID
-  packageName: 'com.spellapp', // Android Package Name
+  name: 'Spell',
+  bundleId: 'com.w2.spell', // iOS Bundle ID
+  packageName: 'com.w2.spell', // Android Package Name
 };

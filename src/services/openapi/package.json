@@ -1,7 +1,7 @@
 {
   "name": "@spellapp/openapi",
   "version": "1.0.0",
-  "description": "OpenAPI client for SpellApp",
+  "description": "OpenAPI client for Spell",
   "main": "index.ts",
   "scripts": {
     "example": "node example.ts"
@@ -14,6 +14,6 @@
     "api",
     "client"
   ],
-  "author": "SpellApp Team",
+  "author": "w2 Team",
   "license": "MIT"
 }

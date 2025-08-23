@@ -1,4 +1,4 @@
-// 示例组件：展示如何在 SpellApp 中使用通义千问 API
+// 示例组件：展示如何在 Spell 中使用通义千问 API
 import React, { useState } from 'react';
 import {
   View,

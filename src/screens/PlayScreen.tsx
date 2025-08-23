@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
+import { LinearGradient } from 'react-native-linear-gradient';
 import Slider from '@react-native-community/slider';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -13,6 +14,11 @@ import {
   savePlaybackSettings,
   PlaybackSettings,
 } from '../services/storage/playbackSettingsService';
+import { useTheme } from '../hooks/useTheme';
+
+// 滚动项高度常量
+const SCROLL_ITEM_HEIGHT = 40;
+const VISIBLE_ITEMS = 3; // 显示3个数字（上一个、当前、下一个）
 
 // 定义路由参数类型
 type RootStackParamList = {
@@ -40,6 +46,7 @@ export default function PlayScreen() {
   const navigation = useNavigation();
   const route = useRoute<PlayScreenRouteProp>();
   const { recording: recordingParam } = route.params || { recording: null };
+  const { colors, textStyles, spacing, shadows } = useTheme();
 
   // 使用响应式咒语数据
   const recording = useRecording(recordingParam?.id || null);
@@ -57,7 +64,8 @@ export default function PlayScreen() {
 
   // 当前循环次数
   const [currentLoop, setCurrentLoop] = useState(1);
-  // 播放完成状态，确保播放完成处理只执行一次
+  // 滚动引用
+  const loopScrollRef = useRef<ScrollView>(null);
 
   // 加载播放设置
   useEffect(() => {
@@ -203,6 +211,32 @@ export default function PlayScreen() {
     }
   };
 
+  // 处理滚动选择循环次数
+  const handleLoopScrollEnd = (event: any) => {
+    if (playbackSettings.playMode === 'single') return;
+
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / SCROLL_ITEM_HEIGHT);
+    const newCount = index + 1;
+
+    if (newCount !== playbackSettings.loopCount) {
+      updateLoopCount(newCount);
+    }
+  };
+
+  // 当循环次数改变时，自动滚动到对应位置
+  useEffect(() => {
+    if (loopScrollRef.current && playbackSettings.playMode === 'loop') {
+      const targetOffset = (playbackSettings.loopCount - 1) * SCROLL_ITEM_HEIGHT;
+      loopScrollRef.current.scrollTo({ y: targetOffset, animated: true });
+    }
+  }, [playbackSettings.loopCount, playbackSettings.playMode]);
+
+  // 生成数字选项数组（1-99）
+  const generateNumberOptions = () => {
+    return Array.from({ length: 99 }, (_, i) => i + 1);
+  };
+
   // 处理进度条变化
   const handleSliderChange = async (value: number) => {
     if (audioState.totalDuration > 0) {
@@ -244,8 +278,10 @@ export default function PlayScreen() {
   const progress =
     audioState.totalDuration > 0 ? audioState.currentPosition / audioState.totalDuration : 0;
 
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
+
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <TopNavigationBar
         title="Player"
         showBackButton={true}
@@ -256,356 +292,381 @@ export default function PlayScreen() {
         showSettingsButton={false}
       />
 
-      {/* 咒语显示区域 */}
-      <View
-        style={{
-          marginTop: 16,
-          marginHorizontal: 20,
-          padding: 16,
-          backgroundColor: '#F5F5F5',
-          borderRadius: 12,
-          maxHeight: 150,
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: '600',
-            color: '#393640',
-            marginBottom: 8,
-          }}
-        >
-          咒语
-        </Text>
-        <View
-          style={{
-            maxHeight: 100,
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 14,
-              color: '#535059',
-              lineHeight: 20,
-            }}
-          >
-            {recording?.script || recordingParam?.script || '暂无咒语'}
+      {/* 文稿显示区域 */}
+      <View style={dynamicStyles.scriptContainer}>
+        <Text style={dynamicStyles.scriptTitle}>文稿</Text>
+        <View style={dynamicStyles.scriptContent}>
+          <Text style={dynamicStyles.scriptText}>
+            {recording?.script || recordingParam?.script || '暂无文稿'}
           </Text>
         </View>
       </View>
 
       {/* 音频可视化区域 */}
-      <View style={styles.imageContainer}>
-        <View style={styles.audioVisualizer}>
-          <Icon name={audioState.isPlaying ? 'pulse' : 'mic'} size={100} color="#7572B7" />
+      <View style={dynamicStyles.imageContainer}>
+        <View style={dynamicStyles.audioVisualizer}>
+          <Icon name={audioState.isPlaying ? 'pulse' : 'mic'} size={100} color={colors.primary} />
         </View>
       </View>
 
       {/* 音频信息 */}
-      <View style={styles.audioInfoContainer}>
-        <Text style={styles.audioTitle}>{displayRecording.title}</Text>
+      <View style={dynamicStyles.audioInfoContainer}>
+        <Text style={dynamicStyles.audioTitle}>{displayRecording.title}</Text>
 
-        <View style={styles.audioMetaContainer}>
-          <View style={styles.metaItem}>
-            <Icon name="mic-outline" size={16} color="#535059" />
-            <Text style={styles.metaText}>Pitch: 00</Text>
+        <View style={dynamicStyles.audioMetaContainer}>
+          <View style={dynamicStyles.metaItem}>
+            <Icon name="mic-outline" size={16} color={colors.textSecondary} />
+            <Text style={dynamicStyles.metaText}>Pitch: 00</Text>
           </View>
 
-          <View style={styles.metaItem}>
-            <Icon name="speedometer-outline" size={16} color="#535059" />
-            <Text style={styles.metaText}>Speed: Normal</Text>
+          <View style={dynamicStyles.metaItem}>
+            <Icon name="speedometer-outline" size={16} color={colors.textSecondary} />
+            <Text style={dynamicStyles.metaText}>Speed: Normal</Text>
           </View>
         </View>
 
-        <View style={styles.durationContainer}>
-          <Text style={styles.durationText}>{formatDuration(displayRecording.duration || 0)}</Text>
-          <Text style={styles.durationSeparator}>-</Text>
-          <Text style={styles.durationText}>{displayRecording.playCount || 0}次播放</Text>
+        <View style={dynamicStyles.durationContainer}>
+          <Text style={dynamicStyles.durationText}>
+            {formatDuration(displayRecording.duration || 0)}
+          </Text>
+          <Text style={dynamicStyles.durationSeparator}>-</Text>
+          <Text style={dynamicStyles.durationText}>{displayRecording.playCount || 0}次播放</Text>
+          {playbackSettings.playMode === 'loop' && (
+            <>
+              <Text style={dynamicStyles.durationSeparator}>-</Text>
+              <Text style={dynamicStyles.durationText}>
+                {currentLoop}/{playbackSettings.loopCount}次循环
+              </Text>
+            </>
+          )}
         </View>
       </View>
 
       {/* 进度条 */}
-      <View style={styles.progressContainer}>
+      <View style={dynamicStyles.progressContainer}>
         <Slider
-          style={styles.slider}
+          style={dynamicStyles.slider}
           minimumValue={0}
           maximumValue={1}
           value={progress}
           onValueChange={handleSliderChange}
-          minimumTrackTintColor="#7572B7"
-          maximumTrackTintColor="#E3E3F1"
-          thumbTintColor="#FFFFFF"
+          minimumTrackTintColor={colors.primary}
+          maximumTrackTintColor={colors.border}
+          thumbTintColor={colors.buttonText}
           disabled={!audioState.isPlaying && !audioState.isPaused}
         />
-        <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{formatTime(audioState.currentPosition)}</Text>
-          <Text style={styles.timeText}>{formatTime(audioState.totalDuration)}</Text>
+        <View style={dynamicStyles.timeContainer}>
+          <Text style={dynamicStyles.timeText}>{formatTime(audioState.currentPosition)}</Text>
+          <Text style={dynamicStyles.timeText}>{formatTime(audioState.totalDuration)}</Text>
         </View>
       </View>
 
       {/* 控制按钮 */}
-      <View style={styles.controlsContainer}>
+      <View style={dynamicStyles.controlsContainer}>
         {/* 左侧：循环次数设置 */}
-        <View style={styles.loopCountContainer}>
-          <TouchableOpacity
-            style={styles.loopCountButton}
-            onPress={() => updateLoopCount(playbackSettings.loopCount - 1)}
-            disabled={playbackSettings.playMode === 'single' || playbackSettings.loopCount <= 1}
-          >
-            <Icon
-              name="remove"
-              size={20}
-              color={
-                playbackSettings.playMode === 'single' || playbackSettings.loopCount <= 1
-                  ? '#D2CED9'
-                  : '#7572B7'
-              }
-            />
-          </TouchableOpacity>
-
-          <Text style={styles.loopCountText}>
-            {playbackSettings.playMode === 'single' ? '1' : playbackSettings.loopCount}
-          </Text>
-
-          <TouchableOpacity
-            style={styles.loopCountButton}
-            onPress={() => updateLoopCount(playbackSettings.loopCount + 1)}
-            disabled={playbackSettings.playMode === 'single' || playbackSettings.loopCount >= 99}
-          >
-            <Icon
-              name="add"
-              size={20}
-              color={
-                playbackSettings.playMode === 'single' || playbackSettings.loopCount >= 99
-                  ? '#D2CED9'
-                  : '#7572B7'
-              }
-            />
-          </TouchableOpacity>
+        <View style={dynamicStyles.loopCountContainer}>
+          {playbackSettings.playMode === 'single' ? (
+            <Text style={dynamicStyles.loopCountText}>1</Text>
+          ) : (
+            <View style={dynamicStyles.scrollPickerWrapper}>
+              <ScrollView
+                ref={loopScrollRef}
+                style={dynamicStyles.scrollPicker}
+                contentContainerStyle={dynamicStyles.scrollPickerContent}
+                showsVerticalScrollIndicator={false}
+                snapToInterval={SCROLL_ITEM_HEIGHT}
+                decelerationRate="fast"
+                onMomentumScrollEnd={handleLoopScrollEnd}
+                scrollEventThrottle={16}
+              >
+                {generateNumberOptions().map((number, _index) => {
+                  const isSelected = number === playbackSettings.loopCount;
+                  return (
+                    <View key={number} style={dynamicStyles.scrollItem}>
+                      <Text
+                        style={[
+                          dynamicStyles.scrollItemText,
+                          isSelected && dynamicStyles.selectedScrollItemText,
+                        ]}
+                      >
+                        {number}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+              {/* 顶部渐变遮罩 */}
+              <LinearGradient
+                colors={[colors.background, 'transparent']}
+                style={dynamicStyles.topGradient}
+                pointerEvents="none"
+              />
+              {/* 底部渐变遮罩 */}
+              <LinearGradient
+                colors={['transparent', colors.background]}
+                style={dynamicStyles.bottomGradient}
+                pointerEvents="none"
+              />
+            </View>
+          )}
         </View>
 
         {/* 中间：播放/暂停按钮 */}
-        <TouchableOpacity style={styles.playPauseButton} onPress={togglePlayPause}>
-          <Icon name={audioState.isPlaying ? 'pause' : 'play'} size={32} color="#FFFFFF" />
+        <TouchableOpacity style={dynamicStyles.playPauseButton} onPress={togglePlayPause}>
+          <Icon
+            name={audioState.isPlaying ? 'pause' : 'play'}
+            size={32}
+            color={colors.buttonText}
+          />
         </TouchableOpacity>
 
-        {/* 右侧：单次播放/循环播放切换 */}
-        <TouchableOpacity style={styles.modeButton} onPress={togglePlayMode}>
-          <Icon
-            name={playbackSettings.playMode === 'single' ? 'play' : 'repeat'}
-            size={24}
-            color="#7572B7"
-          />
-          <Text style={styles.modeButtonText}>
+        {/* 右侧：单次播放/循环播放文字说明 */}
+        <TouchableOpacity style={dynamicStyles.modeButton} onPress={togglePlayMode}>
+          <Text style={dynamicStyles.modeButtonText}>
             {playbackSettings.playMode === 'single' ? '单次' : '循环'}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* 当前循环次数显示 (仅在循环模式下显示) */}
-      {playbackSettings.playMode === 'loop' && (
-        <View style={styles.loopInfoContainer}>
-          <Text style={styles.loopInfoText}>
-            {currentLoop}/{playbackSettings.loopCount}
-          </Text>
-        </View>
-      )}
-
       {/* 底部指示器 */}
-      <View style={styles.tabIndicator} />
+      <View style={dynamicStyles.tabIndicator} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FDFCFF',
-  },
-  scriptContainer: {
-    marginTop: 16,
-    marginHorizontal: 20,
-    padding: 16,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    maxHeight: 150,
-  },
-  scriptTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#393640',
-    marginBottom: 8,
-  },
-  scriptContent: {
-    maxHeight: 100,
-  },
-  scriptText: {
-    fontSize: 14,
-    color: '#535059',
-    lineHeight: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    height: 96,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 15,
-    fontWeight: '400',
-    color: '#393640',
-    fontFamily: 'Rubik',
-    textAlign: 'center',
-    flex: 1,
-  },
-  settingsButton: {
-    padding: 8,
-  },
-  imageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 48,
-  },
-  audioVisualizer: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: '#E3E3F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  audioInfoContainer: {
-    alignItems: 'center',
-    marginTop: 48,
-  },
-  audioTitle: {
-    fontSize: 28,
-    fontWeight: '500',
-    color: '#393640',
-    fontFamily: 'Rubik',
-    textAlign: 'center',
-  },
-  audioMetaContainer: {
-    flexDirection: 'row',
-    marginTop: 16,
-    justifyContent: 'center',
-    width: '100%',
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  metaText: {
-    fontSize: 15,
-    color: '#535059',
-    fontFamily: 'Rubik',
-    marginLeft: 4,
-  },
-  durationContainer: {
-    flexDirection: 'row',
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  durationText: {
-    fontSize: 15,
-    color: '#535059',
-    fontFamily: 'Rubik',
-  },
-  durationSeparator: {
-    fontSize: 15,
-    color: '#D2CED9',
-    fontFamily: 'Rubik',
-    marginHorizontal: 8,
-  },
-  progressContainer: {
-    marginTop: 40,
-    paddingHorizontal: 28,
-  },
-  slider: {
-    width: '100%',
-    height: 28,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#535059',
-    fontFamily: 'Rubik',
-    fontWeight: '500',
-  },
-  loopCountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  loopCountButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E3E3F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loopCountText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#393640',
-    marginHorizontal: 12,
-    minWidth: 24,
-    textAlign: 'center',
-  },
-  modeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#E3E3F1',
-  },
-  modeButtonText: {
-    fontSize: 16,
-    color: '#393640',
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  controlsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 40,
-    paddingHorizontal: 28,
-  },
-  playPauseButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#7572B7',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loopInfoContainer: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  loopInfoText: {
-    fontSize: 16,
-    color: '#535059',
-    fontWeight: '500',
-  },
-  tabIndicator: {
-    width: 139,
-    height: 5,
-    backgroundColor: 'black',
-    borderRadius: 100,
-    alignSelf: 'center',
-    position: 'absolute',
-    bottom: 8,
-  },
-});
+/**
+ * 创建动态样式的函数
+ */
+const createStyles = ({ colors, textStyles, spacing, shadows }: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scriptContainer: {
+      marginTop: spacing.md,
+      marginHorizontal: spacing.lg,
+      padding: spacing.md,
+      backgroundColor: colors.backgroundPrimary,
+      borderRadius: spacing.borderRadius.md,
+      maxHeight: 150,
+      ...shadows.light,
+    },
+    scriptTitle: {
+      ...textStyles.body1,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    scriptContent: {
+      maxHeight: 100,
+    },
+    scriptText: {
+      ...textStyles.body2,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    imageContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: spacing.xxl,
+    },
+    audioVisualizer: {
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      backgroundColor: colors.backgroundPrimary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...shadows.medium,
+    },
+    audioInfoContainer: {
+      alignItems: 'center',
+      marginTop: spacing.xxl,
+    },
+    audioTitle: {
+      ...textStyles.h2,
+      color: colors.text,
+      textAlign: 'center',
+    },
+    audioMetaContainer: {
+      flexDirection: 'row',
+      marginTop: spacing.md,
+      justifyContent: 'center',
+      width: '100%',
+    },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginHorizontal: spacing.sm,
+    },
+    metaText: {
+      ...textStyles.body2,
+      color: colors.textSecondary,
+      marginLeft: 4,
+    },
+    durationContainer: {
+      flexDirection: 'row',
+      marginTop: spacing.md,
+      alignItems: 'center',
+    },
+    durationText: {
+      ...textStyles.body2,
+      color: colors.textSecondary,
+    },
+    durationSeparator: {
+      ...textStyles.body2,
+      color: colors.border,
+      marginHorizontal: spacing.sm,
+    },
+    progressContainer: {
+      marginTop: spacing.xl,
+      paddingHorizontal: spacing.lg + spacing.md,
+    },
+    slider: {
+      width: '100%',
+      height: 28,
+    },
+    timeContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing.sm,
+    },
+    timeText: {
+      ...textStyles.body2,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    controlsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: spacing.xl,
+      paddingHorizontal: spacing.lg,
+      position: 'relative',
+    },
+    loopCountContainer: {
+      position: 'absolute',
+      left: spacing.xl,
+      alignItems: 'center',
+      width: 80,
+    },
+    simpleScrollPickerContainer: {
+      width: 80,
+      height: SCROLL_ITEM_HEIGHT * VISIBLE_ITEMS,
+      overflow: 'hidden',
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: colors.backgroundPrimary,
+      ...shadows.medium,
+      paddingHorizontal: spacing.sm,
+    },
+    simpleScrollPicker: {
+      flex: 1,
+    },
+    simpleScrollPickerContent: {
+      paddingVertical: SCROLL_ITEM_HEIGHT, // 添加上下padding确保第一个和最后一个选项能居中
+    },
+    simpleScrollItem: {
+      height: SCROLL_ITEM_HEIGHT,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    simpleScrollItemText: {
+      ...textStyles.h3,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    scrollPickerWrapper: {
+      width: 80,
+      height: SCROLL_ITEM_HEIGHT * VISIBLE_ITEMS,
+      position: 'relative',
+      backgroundColor: colors.backgroundPrimary,
+      borderRadius: spacing.borderRadius.md,
+      ...shadows.medium,
+    },
+    scrollPicker: {
+      flex: 1,
+    },
+    scrollPickerContent: {
+      paddingVertical: SCROLL_ITEM_HEIGHT, // 添加上下padding确保第一个和最后一个选项能居中
+    },
+    scrollItem: {
+      height: SCROLL_ITEM_HEIGHT,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    scrollItemText: {
+      ...textStyles.body1,
+      color: colors.textSecondary,
+      fontWeight: '400',
+    },
+    selectedScrollItemText: {
+      ...textStyles.h3,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    topGradient: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: SCROLL_ITEM_HEIGHT,
+      zIndex: 1,
+    },
+    bottomGradient: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: SCROLL_ITEM_HEIGHT,
+      zIndex: 1,
+    },
+    loopCountText: {
+      ...textStyles.h3,
+      color: colors.text,
+      textAlign: 'center',
+      width: 80,
+      height: SCROLL_ITEM_HEIGHT * VISIBLE_ITEMS,
+      lineHeight: SCROLL_ITEM_HEIGHT * VISIBLE_ITEMS,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: colors.backgroundPrimary,
+      ...shadows.medium,
+      paddingHorizontal: spacing.sm,
+    },
+    playPauseButton: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...shadows.heavy,
+    },
+    modeButton: {
+      position: 'absolute',
+      right: spacing.xl,
+      alignItems: 'center',
+      width: 80,
+      height: SCROLL_ITEM_HEIGHT * 1,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: colors.backgroundPrimary,
+      ...shadows.medium,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.sm,
+    },
+    modeButtonText: {
+      ...textStyles.h3,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+
+    tabIndicator: {
+      width: 139,
+      height: 5,
+      backgroundColor: colors.primary,
+      borderRadius: spacing.borderRadius.circle,
+      alignSelf: 'center',
+      position: 'absolute',
+      bottom: spacing.sm,
+    },
+  });

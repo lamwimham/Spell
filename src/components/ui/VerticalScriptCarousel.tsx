@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useTheme } from '../../hooks/useTheme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -38,6 +39,7 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
   isRegenerating = false,
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { colors, textStyles, spacing, shadows } = useTheme();
 
   // 处理长按选择
   const handleLongPress = (id: string) => {
@@ -55,19 +57,124 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
     }
   };
 
+  // 创建动态样式
+  const createStyles = () =>
+    StyleSheet.create({
+      overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      modalContainer: {
+        width: SCREEN_WIDTH * 0.9,
+        maxHeight: SCREEN_HEIGHT * 0.8,
+        backgroundColor: colors.surface,
+        borderRadius: spacing.borderRadius.lg,
+        overflow: 'hidden',
+        ...shadows.heavy,
+      },
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: spacing.lg,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      },
+      headerTitle: {
+        ...textStyles.h3,
+        color: colors.text,
+      } as any,
+      closeButton: {
+        padding: spacing.xs,
+      },
+      content: {
+        padding: spacing.lg,
+        alignItems: 'center',
+      },
+      carouselContainer: {
+        width: '100%',
+        height: 300,
+        marginVertical: spacing.sm,
+      },
+      listContent: {
+        paddingVertical: spacing.sm,
+      },
+      itemContainer: {
+        height: 100,
+        marginVertical: spacing.sm,
+        marginHorizontal: spacing.lg,
+        borderRadius: spacing.borderRadius.md,
+        backgroundColor: colors.backgroundElevated,
+        borderWidth: 2,
+        borderColor: colors.border,
+        overflow: 'hidden',
+      },
+      selectedItem: {
+        borderColor: colors.primary,
+        backgroundColor: colors.backgroundPrimary,
+        ...shadows.medium,
+      },
+      itemContent: {
+        flex: 1,
+        padding: spacing.md,
+        justifyContent: 'center',
+      },
+      itemText: {
+        ...textStyles.body2,
+        color: colors.text,
+      } as any,
+      footer: {
+        flexDirection: 'row',
+        padding: spacing.lg,
+        gap: spacing.md,
+      },
+      regenerateButton: {
+        flex: 1,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: spacing.borderRadius.md,
+        backgroundColor: colors.backgroundElevated,
+        borderWidth: 1,
+        borderColor: colors.border,
+      },
+      regenerateButtonText: {
+        ...textStyles.button,
+        color: colors.text,
+      } as any,
+      confirmButton: {
+        flex: 1,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: spacing.borderRadius.md,
+        backgroundColor: colors.primary,
+      },
+      confirmButtonText: {
+        ...textStyles.button,
+        color: colors.buttonText,
+      } as any,
+      disabledButton: {
+        backgroundColor: colors.textTertiary,
+      },
+    });
+
   // 渲染单个选项
   const renderItem = ({ item }: { item: ScriptOption }) => {
     const isSelected = selectedId === item.id;
+    const dynamicStyles = createStyles();
 
     return (
-      <View style={[styles.itemContainer, isSelected && styles.selectedItem]}>
+      <View style={[dynamicStyles.itemContainer, isSelected && dynamicStyles.selectedItem]}>
         <TouchableOpacity
-          style={styles.itemContent}
+          style={dynamicStyles.itemContent}
           onLongPress={() => handleLongPress(item.id)}
           delayLongPress={200}
           activeOpacity={0.8}
         >
-          <Text style={styles.itemText} numberOfLines={3}>
+          <Text style={dynamicStyles.itemText} numberOfLines={3}>
             {item.content}
           </Text>
         </TouchableOpacity>
@@ -75,21 +182,21 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
     );
   };
 
+  const dynamicStyles = createStyles();
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>选择咒语</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#393640" />
+      <View style={dynamicStyles.overlay}>
+        <View style={dynamicStyles.modalContainer}>
+          <View style={dynamicStyles.header}>
+            <Text style={dynamicStyles.headerTitle}>选择咒语</Text>
+            <TouchableOpacity onPress={onClose} style={dynamicStyles.closeButton}>
+              <Icon name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.content}>
-            <Text style={styles.instructionText}>长按选择咒语，或滑动浏览选项</Text>
-
-            <View style={styles.carouselContainer}>
+          <View style={dynamicStyles.content}>
+            <View style={dynamicStyles.carouselContainer}>
               <FlatList
                 data={options}
                 renderItem={renderItem}
@@ -97,29 +204,29 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
                 showsVerticalScrollIndicator={false}
                 decelerationRate="normal"
                 snapToAlignment="start"
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={dynamicStyles.listContent}
               />
             </View>
           </View>
 
-          <View style={styles.footer}>
+          <View style={dynamicStyles.footer}>
             <TouchableOpacity
-              style={styles.regenerateButton}
+              style={dynamicStyles.regenerateButton}
               onPress={onRegenerate}
               disabled={isRegenerating}
             >
               {isRegenerating ? (
-                <ActivityIndicator size="small" color="#393640" />
+                <ActivityIndicator size="small" color={colors.text} />
               ) : (
-                <Text style={styles.regenerateButtonText}>重新生成</Text>
+                <Text style={dynamicStyles.regenerateButtonText}>重新生成</Text>
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.confirmButton, !selectedId && styles.disabledButton]}
+              style={[dynamicStyles.confirmButton, !selectedId && dynamicStyles.disabledButton]}
               onPress={handleConfirmSelection}
               disabled={!selectedId || isRegenerating}
             >
-              <Text style={styles.confirmButtonText}>选中</Text>
+              <Text style={dynamicStyles.confirmButtonText}>选中</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -127,138 +234,3 @@ export const VerticalScriptCarousel: React.FC<VerticalScriptCarouselProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: SCREEN_WIDTH * 0.9,
-    maxHeight: SCREEN_HEIGHT * 0.8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E3F1',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Rubik',
-    fontWeight: '600',
-    color: '#393640',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  content: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  instructionText: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#535059',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  carouselContainer: {
-    width: '100%',
-    height: 240,
-    marginVertical: 20,
-  },
-  listContent: {
-    paddingVertical: 10,
-  },
-  itemContainer: {
-    height: 100,
-    marginVertical: 8,
-    marginHorizontal: 20,
-    borderRadius: 16,
-    backgroundColor: '#F8F8F8',
-    borderWidth: 2,
-    borderColor: '#E3E3F1',
-    overflow: 'hidden',
-  },
-  selectedItem: {
-    borderColor: '#7572B7',
-    backgroundColor: '#EDECF7',
-    shadowColor: '#7572B7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  itemContent: {
-    flex: 1,
-    padding: 16,
-    justifyContent: 'center',
-  },
-  itemText: {
-    fontSize: 14,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#393640',
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 20,
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: '#F8F8F8',
-    borderWidth: 1,
-    borderColor: '#E3E3F1',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '500',
-    color: '#535059',
-  },
-  regenerateButton: {
-    flex: 1,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: '#E3E3F1',
-  },
-  regenerateButtonText: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '500',
-    color: '#393640',
-  },
-  confirmButton: {
-    flex: 1,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: '#7572B7',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '500',
-    color: '#FFFFFF',
-  },
-  disabledButton: {
-    backgroundColor: '#C8C5D0',
-  },
-});

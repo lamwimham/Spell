@@ -1,4 +1,3 @@
-import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import React, { useState, useRef, useCallback } from 'react';
 import {
   FlatList,
@@ -12,16 +11,17 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
-  useColorScheme,
   RefreshControl,
 } from 'react-native';
+import { useNavigation, useFocusEffect, NavigationProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { DrawerPanel } from '../components/ui/DrawerPanel';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 import { useRecordings, useRecordingActions } from '../hooks/useRecordings';
+import { useRecordingValidation } from '../hooks/useRecordingValidation';
 import Recording from '../database/models/Recording';
 import { RootStackParamList } from '../types/navigation';
-import { Colors } from '../constants/Colors';
+import { useTheme } from '../hooks/useTheme';
 // import { scheduleTestNotification } from '../services/notifications/scheduleManager';
 
 // 启用LayoutAnimation在Android上工作
@@ -37,12 +37,14 @@ export default function HomeScreen() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const { colors, textStyles, spacing, shadows, isDark } = useTheme();
 
   // 获取咒语列表和操作方法
   const recordings = useRecordings();
   const { deleteRecording } = useRecordingActions();
+
+  // 录音数据验证（后台自动运行）
+  useRecordingValidation();
 
   // 当屏幕重新获得焦点时刷新数据
   useFocusEffect(
@@ -140,77 +142,109 @@ export default function HomeScreen() {
   };
 
   // 渲染咒语列表项
-  const renderRecordingItem = ({ item }: { item: Recording }) => (
-    <TouchableOpacity
-      style={styles.recordingItem}
-      onPress={() =>
-        isDeleteMode ? toggleSelectItem(item.id) : navigation.navigate('Play', { recording: item })
-      }
-      activeOpacity={0.7}
-    >
-      {isDeleteMode && (
-        <View style={styles.checkboxContainer}>
+  const renderRecordingItem = ({ item }: { item: Recording }) => {
+    return (
+      <TouchableOpacity
+        style={dynamicStyles.recordingItem}
+        onPress={() =>
+          isDeleteMode
+            ? toggleSelectItem(item.id)
+            : navigation.navigate('Play', { recording: item })
+        }
+        activeOpacity={0.7}
+      >
+        {/* 左侧区域：复选框和麦克风图标 */}
+        <View style={dynamicStyles.leftSection}>
+          {isDeleteMode && (
+            <TouchableOpacity
+              onPress={() => toggleSelectItem(item.id)}
+              style={[
+                dynamicStyles.checkbox,
+                selectedItems.includes(item.id) && dynamicStyles.checkboxSelected,
+              ]}
+            >
+              {selectedItems.includes(item.id) && (
+                <Icon name="checkmark" size={16} color={colors.buttonText} />
+              )}
+            </TouchableOpacity>
+          )}
+
+          <View style={dynamicStyles.iconContainer}>
+            <Icon name="mic" size={24} color={colors.primary} />
+          </View>
+        </View>
+
+        {/* 中间区域：三行内容 */}
+        <View style={dynamicStyles.recordingInfo}>
+          {/* 第一行：标题 */}
+          <Text style={dynamicStyles.recordingTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+
+          {/* 第二行：脚本 */}
+          {item.script && item.script.trim() ? (
+            <Text style={dynamicStyles.recordingScript} numberOfLines={2}>
+              {item.script}
+            </Text>
+          ) : (
+            <Text style={dynamicStyles.noScript}>暂无脚本内容</Text>
+          )}
+
+          {/* 第三行：播放次数和录音时长 */}
+          <View style={dynamicStyles.metaSection}>
+            <View style={dynamicStyles.metaItem}>
+              <Icon name="play-outline" size={12} color={colors.textTertiary} />
+              <Text style={dynamicStyles.metaText}>{item.playCount}次播放</Text>
+            </View>
+
+            <View style={dynamicStyles.metaDivider} />
+
+            <View style={dynamicStyles.metaItem}>
+              <Icon name="time-outline" size={12} color={colors.textTertiary} />
+              <Text style={dynamicStyles.metaText}>{formatDuration(item.duration)}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 右侧区域：播放按钮 */}
+        {!isDeleteMode && (
           <TouchableOpacity
-            onPress={() => toggleSelectItem(item.id)}
-            style={[styles.checkbox, selectedItems.includes(item.id) && styles.checkboxSelected]}
+            style={dynamicStyles.playButton}
+            onPress={() => {
+              navigation.navigate('Play', { recording: item });
+            }}
           >
-            {selectedItems.includes(item.id) && (
-              <Icon name="checkmark" size={16} color={theme.buttonText} />
-            )}
+            <Icon name="play-circle" size={32} color={colors.primary} />
           </TouchableOpacity>
-        </View>
-      )}
-
-      <View style={styles.iconContainer}>
-        <Icon name="mic" size={32} color={theme.icon} />
-      </View>
-      <View style={styles.recordingInfo}>
-        <Text style={styles.recordingTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={styles.recordingScript} numberOfLines={1}>
-          {item.script}
-        </Text>
-        <View style={styles.recordingMetaContainer}>
-          <Text style={styles.recordingMeta}>录音时长: {formatDuration(item.duration)}</Text>
-          <Text style={styles.recordingMetaSeparator}>-</Text>
-          <Text style={styles.recordingMeta}>播放次数: {item.playCount}次</Text>
-        </View>
-      </View>
-
-      {!isDeleteMode && (
-        <TouchableOpacity
-          style={styles.playButton}
-          onPress={() => {
-            navigation.navigate('Play', { recording: item });
-          }}
-        >
-          <Icon name="play" size={24} color={theme.icon} />
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
-  );
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   // 空状态组件
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Icon name="mic-outline" size={64} color={theme.textLight} />
-      <Text style={styles.emptyStateTitle}>还没有咒语</Text>
-      <Text style={styles.emptyStateSubtitle}>点击下方麦克风按钮开始录制</Text>
-    </View>
-  );
+  const renderEmptyState = () => {
+    return (
+      <View style={dynamicStyles.emptyState}>
+        <Icon name="mic-outline" size={64} color={colors.textTertiary} />
+        <Text style={dynamicStyles.emptyStateTitle}>还没有咒语</Text>
+        <Text style={dynamicStyles.emptyStateSubtitle}>点击下方麦克风按钮开始录制</Text>
+      </View>
+    );
+  };
+
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+    <View style={[dynamicStyles.container]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       {isDeleteMode ? (
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={toggleDeleteMode}>
-            <Icon name="close-circle" size={24} color={theme.error} />
+        <View style={dynamicStyles.header}>
+          <TouchableOpacity style={dynamicStyles.backButton} onPress={toggleDeleteMode}>
+            <Icon name="close-circle" size={24} color={colors.error} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>咒语库</Text>
+          <Text style={[dynamicStyles.headerTitle]}>咒语库</Text>
           <TouchableOpacity
-            style={styles.deleteButton}
+            style={dynamicStyles.deleteButton}
             onPress={handleDelete}
             disabled={selectedItems.length === 0}
           >
@@ -229,7 +263,7 @@ export default function HomeScreen() {
               <Icon
                 name="checkmark-circle"
                 size={24}
-                color={selectedItems.length > 0 ? theme.primary : theme.textLight}
+                color={selectedItems.length > 0 ? colors.primary : colors.textTertiary}
               />
             </Animated.View>
           </TouchableOpacity>
@@ -242,15 +276,13 @@ export default function HomeScreen() {
           onLeftIconPress={() => setIsDrawerVisible(true)}
           rightIconName="trash-outline"
           onRightIconPress={toggleDeleteMode}
-          iconColor={theme.primary}
+          iconColor={colors.primary}
         />
       )}
 
-      <View style={styles.titleContainer}>
-        <Text style={[styles.title, { color: theme.text }]}>我的咒语</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          您录制的音频文件将显示在这里
-        </Text>
+      <View style={dynamicStyles.titleContainer}>
+        <Text style={[dynamicStyles.title]}>我的咒语</Text>
+        <Text style={[dynamicStyles.subtitle]}>您录制的咒语文件将显示在这里</Text>
       </View>
 
       <FlatList
@@ -258,7 +290,7 @@ export default function HomeScreen() {
         renderItem={renderRecordingItem}
         keyExtractor={item => item.id}
         contentContainerStyle={
-          recordings.length === 0 ? styles.emptyContainer : styles.listContainer
+          recordings.length === 0 ? dynamicStyles.emptyContainer : dynamicStyles.listContainer
         }
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
@@ -266,33 +298,24 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[theme.primary]}
-            tintColor={theme.primary}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
             title="刷新中..."
-            titleColor={theme.textSecondary}
+            titleColor={colors.textSecondary}
           />
         }
       />
 
-      {/* FAB按钮 - 测试通知 */}
-      {/* <TouchableOpacity
-        style={[styles.fabButton, { bottom: 150 }]}
-        onPress={scheduleTestNotification}
-        activeOpacity={0.8}
-      >
-        <Icon name="notifications" size={28} color="#FFFFFF" />
-      </TouchableOpacity> */}
-
       {/* FAB按钮 - 咒语 */}
       <TouchableOpacity
-        style={[styles.fabButton, { backgroundColor: theme.primary }]}
+        style={[dynamicStyles.fabButton]}
         onPress={() => navigation.navigate('Record')}
         activeOpacity={0.8}
       >
-        <Icon name="mic" size={28} color={theme.buttonText} />
+        <Icon name="mic" size={28} color={colors.buttonText} />
       </TouchableOpacity>
 
-      <View style={[styles.tabIndicator, { backgroundColor: theme.primary }]} />
+      <View style={[dynamicStyles.tabIndicator]} />
 
       {/* 抽屉面板 */}
       <DrawerPanel
@@ -304,162 +327,184 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.light.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxSelected: {
-    backgroundColor: Colors.light.primary,
-  },
-  checkboxContainer: {
-    width: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 48,
-    paddingBottom: 8,
-    height: 96,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 15,
-    fontWeight: '400',
-    fontFamily: 'Rubik',
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  titleContainer: {
-    paddingHorizontal: 24,
-    marginTop: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '400',
-    fontFamily: 'Rubik',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 17,
-    fontFamily: 'Rubik',
-    lineHeight: 22,
-  },
-  listContainer: {
-    paddingHorizontal: 20,
-    marginTop: 40,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recordingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    minHeight: 80,
-    borderRadius: 8,
-    color: Colors.light.text,
-    backgroundColor: Colors.light.background,
-  },
-  iconContainer: {
-    width: 48,
-    height: 56,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recordingInfo: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
-  },
-  recordingTitle: {
-    fontSize: 17,
-    fontWeight: '400',
-    color: Colors.light.text,
-    fontFamily: 'Rubik',
-    marginBottom: 2,
-  },
-  recordingScript: {
-    fontSize: 15,
-    color: Colors.light.textSecondary,
-    fontFamily: 'Rubik',
-    marginBottom: 2,
-  },
-  recordingMetaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  recordingMeta: {
-    fontSize: 13,
-    color: Colors.light.textSecondary,
-    fontFamily: 'Rubik',
-  },
-  recordingMetaSeparator: {
-    fontSize: 13,
-    color: Colors.light.border,
-    fontFamily: 'Rubik',
-    marginHorizontal: 8,
-  },
-  playButton: {
-    padding: 8,
-  },
-  fabButton: {
-    position: 'absolute',
-    right: 20,
-    bottom: 80,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  tabIndicator: {
-    width: 139,
-    height: 5,
-    borderRadius: 100,
-    alignSelf: 'center',
-    marginBottom: 8,
-    marginTop: 8,
-  },
-  emptyState: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: Colors.light.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateSubtitle: {
-    fontSize: 16,
-    color: Colors.light.textSecondary,
-    textAlign: 'center',
-  },
-});
+/**
+ * 创建动态样式的函数
+ */
+const createStyles = ({ colors, textStyles, spacing, shadows }: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.padding.screen,
+      paddingTop: 48,
+      paddingBottom: spacing.sm,
+      height: 96,
+    },
+    backButton: {
+      padding: spacing.sm,
+    },
+    headerTitle: {
+      ...textStyles.body1,
+      color: colors.text,
+    },
+    deleteButton: {
+      padding: spacing.sm,
+    },
+    titleContainer: {
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.lg,
+    },
+    title: {
+      ...textStyles.h2,
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      ...textStyles.body1,
+      color: colors.textSecondary,
+      lineHeight: 22,
+    },
+    listContainer: {
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.xl,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    recordingItem: {
+      flexDirection: 'row',
+      alignItems: 'center', // 改为center实现整体垂直居中
+      paddingVertical: spacing.padding.card,
+      paddingHorizontal: spacing.md,
+      minHeight: 110,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: colors.surface,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...shadows.light,
+    },
+    leftSection: {
+      flexDirection: 'row',
+      alignItems: 'center', // 垂直居中对齐
+      marginRight: spacing.md,
+    },
+    iconContainer: {
+      width: 44,
+      height: 44,
+      borderRadius: spacing.borderRadius.sm,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.backgroundPrimary,
+      marginLeft: spacing.sm,
+    },
+    recordingInfo: {
+      flex: 1,
+      paddingRight: spacing.sm,
+      justifyContent: 'center', // 添加垂直居中
+    },
+    recordingTitle: {
+      ...textStyles.body1,
+      color: colors.text,
+      fontWeight: '600',
+      marginBottom: spacing.sm,
+      minHeight: 24,
+    },
+    recordingScript: {
+      ...textStyles.body2,
+      color: colors.textSecondary,
+      lineHeight: 20,
+      marginBottom: spacing.sm,
+      minHeight: 20,
+    },
+    noScript: {
+      ...textStyles.body2,
+      color: colors.textTertiary,
+      fontStyle: 'italic',
+      marginBottom: spacing.sm,
+      minHeight: 20,
+    },
+    metaSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    metaText: {
+      ...textStyles.caption,
+      color: colors.textTertiary,
+      marginLeft: 3,
+    },
+    metaDivider: {
+      width: 1,
+      height: 12,
+      backgroundColor: colors.border,
+      marginHorizontal: spacing.sm,
+    },
+    playButton: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 44,
+      height: 44,
+      // 移除marginTop，让它自然居中
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: spacing.sm,
+    },
+    checkboxSelected: {
+      backgroundColor: colors.primary,
+    },
+    fabButton: {
+      position: 'absolute',
+      right: spacing.lg,
+      bottom: 80,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      ...shadows.heavy,
+    },
+    tabIndicator: {
+      width: 139,
+      height: 5,
+      borderRadius: spacing.borderRadius.circle,
+      backgroundColor: colors.primary,
+      alignSelf: 'center',
+      marginBottom: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    emptyState: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xl,
+    },
+    emptyStateTitle: {
+      ...textStyles.h3,
+      color: colors.text,
+      marginTop: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    emptyStateSubtitle: {
+      ...textStyles.body1,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+  });

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 
 /**
- * 咒语滚动走马灯组件属性接口
+ * 文稿滚动走马灯组件属性接口
  * @property {string[]} texts - 要显示的文本数组
  * @property {number} [speed=1] - 滚动速度，值越大速度越快
  * @property {number} [pauseDuration=2000] - 每条文本停留时间(毫秒)
@@ -22,7 +22,7 @@ interface TextMarqueeProps {
 }
 
 /**
- * 垂直方向咒语滚动走马灯组件
+ * 垂直方向文稿滚动走马灯组件
  *
  * 用于展示多条文本，以垂直滚动的方式自动切换显示
  */

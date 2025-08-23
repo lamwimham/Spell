@@ -24,6 +24,7 @@ import { useOpenAIChatWithCustomSystemPrompt } from '../hooks/useOpenai';
 import { VerticalScriptCarousel } from '../components/ui/VerticalScriptCarousel';
 import { useRecordings, useRecordingActions } from '../hooks/useRecordings';
 import Recording from '../database/models/Recording';
+import { useTheme } from '../hooks/useTheme';
 
 const prompt = `**身份设定**：
 
@@ -79,9 +80,10 @@ type RootStackParamList = {
 type RecordScreenRouteProp = RouteProp<RootStackParamList, 'Record'>;
 
 // 波形可视化组件
-const WaveformVisualizer: React.FC<{ isRecording: boolean; amplitude: number }> = ({
+const WaveformVisualizer: React.FC<{ isRecording: boolean; amplitude: number; colors: any }> = ({
   isRecording,
   amplitude,
+  colors,
 }) => {
   const animatedValues = useRef(Array.from({ length: 20 }, () => new Animated.Value(0.1))).current;
 
@@ -113,18 +115,24 @@ const WaveformVisualizer: React.FC<{ isRecording: boolean; amplitude: number }> 
   }, [isRecording, amplitude, animatedValues]);
 
   return (
-    <View style={styles.waveformContainer}>
+    <View
+      style={{ flexDirection: 'row', alignItems: 'center', height: 50, justifyContent: 'center' }}
+    >
       {animatedValues.map((animatedValue, index) => (
         <Animated.View
           key={index}
           style={[
-            styles.waveformBar,
+            {
+              width: 3,
+              marginHorizontal: 1,
+              borderRadius: 1.5,
+            },
             {
               height: animatedValue.interpolate({
                 inputRange: [0, 1],
                 outputRange: [4, 40],
               }),
-              backgroundColor: isRecording ? '#7572B7' : '#E3E3F1',
+              backgroundColor: isRecording ? colors.primary : colors.border,
             },
           ]}
         />
@@ -138,36 +146,94 @@ const RecordingItem: React.FC<{
   item: Recording;
   onPlay: (item: Recording) => void;
   onDelete: (id: string) => void;
-}> = ({ item, onPlay, onDelete }) => (
-  <View style={styles.recordingItem}>
-    <View style={styles.recordingIconContainer}>
-      <Icon name="mic" size={24} color="#75r72B7" />
-    </View>
+  colors: any;
+  textStyles: any;
+  spacing: any;
+}> = ({ item, onPlay, onDelete, colors, textStyles, spacing }) => {
+  const itemStyles = {
+    recordingItem: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      padding: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: spacing.borderRadius.sm,
+      marginBottom: spacing.sm,
+    },
+    recordingIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.backgroundPrimary,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      marginRight: spacing.md,
+    },
+    recordingInfo: {
+      flex: 1,
+    },
+    recordingTitle: {
+      ...textStyles.body1,
+      color: colors.text,
+      fontWeight: '500',
+      marginBottom: spacing.xs,
+    },
+    recordingMeta: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+    },
+    recordingMetaText: {
+      ...textStyles.caption,
+      color: colors.textSecondary,
+    },
+    recordingMetaSeparator: {
+      ...textStyles.caption,
+      color: colors.border,
+      marginHorizontal: spacing.xs,
+    },
+    recordingActions: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+    },
+    recordingActionButton: {
+      padding: spacing.sm,
+      marginLeft: spacing.xs,
+    },
+  };
 
-    <View style={styles.recordingInfo}>
-      <Text style={styles.recordingTitle}>{item.title}</Text>
-      <View style={styles.recordingMeta}>
-        <Text style={styles.recordingMetaText}>{formatDuration(item.duration)}</Text>
-        <Text style={styles.recordingMetaSeparator}>-</Text>
-        <Text style={styles.recordingMetaText}>{item.playCount}次播放</Text>
-        <Text style={styles.recordingMetaSeparator}>-</Text>
-        <Text style={styles.recordingMetaText}>
-          {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '未知日期'}
-        </Text>
+  return (
+    <View style={itemStyles.recordingItem}>
+      <View style={itemStyles.recordingIconContainer}>
+        <Icon name="mic" size={24} color={colors.primary} />
+      </View>
+
+      <View style={itemStyles.recordingInfo}>
+        <Text style={itemStyles.recordingTitle}>{item.title}</Text>
+        <View style={itemStyles.recordingMeta}>
+          <Text style={itemStyles.recordingMetaText}>{formatDuration(item.duration)}</Text>
+          <Text style={itemStyles.recordingMetaSeparator}>-</Text>
+          <Text style={itemStyles.recordingMetaText}>{item.playCount}次播放</Text>
+          <Text style={itemStyles.recordingMetaSeparator}>-</Text>
+          <Text style={itemStyles.recordingMetaText}>
+            {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '未知日期'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={itemStyles.recordingActions}>
+        <TouchableOpacity style={itemStyles.recordingActionButton} onPress={() => onPlay(item)}>
+          <Icon name="play" size={20} color={colors.primary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={itemStyles.recordingActionButton}
+          onPress={() => onDelete(item.id)}
+        >
+          <Icon name="trash-outline" size={20} color={colors.error} />
+        </TouchableOpacity>
       </View>
     </View>
-
-    <View style={styles.recordingActions}>
-      <TouchableOpacity style={styles.recordingActionButton} onPress={() => onPlay(item)}>
-        <Icon name="play" size={20} color="#7572B7" />
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.recordingActionButton} onPress={() => onDelete(item.id)}>
-        <Icon name="trash-outline" size={20} color="#FF6B6B" />
-      </TouchableOpacity>
-    </View>
-  </View>
-);
+  );
+};
 
 // 格式化时间显示
 const formatDuration = (seconds: number): string => {
@@ -185,6 +251,7 @@ export function RecordScreen() {
   const route = useRoute<RecordScreenRouteProp>();
   const params = route.params || {};
   const insets = useSafeAreaInsets();
+  const { colors, textStyles, spacing, shadows, isDark } = useTheme();
 
   // 使用音频Hook
   const {
@@ -502,24 +569,145 @@ export function RecordScreen() {
     // Alert.alert('成功', '已选择咒语');
   };
 
+  // 创建动态样式函数
+  const createStyles = ({ colors, textStyles, spacing, shadows }: any) =>
+    StyleSheet.create({
+      container: {
+        flex: 1,
+        backgroundColor: colors.background,
+      },
+      content: {
+        flex: 1,
+        paddingHorizontal: spacing.lg,
+      },
+      scriptSection: {
+        marginTop: spacing.lg,
+        marginBottom: spacing.xxl,
+      },
+      titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        width: '100%',
+      },
+      titleInputContainer: {
+        flex: 1,
+      },
+      titleInput: {
+        width: '100%',
+      },
+      aiButton: {
+        width: 48,
+        height: 48,
+        borderRadius: spacing.borderRadius.sm,
+        backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: spacing.sm,
+        marginBottom: spacing.xs,
+      },
+      scriptContainer: {
+        marginTop: spacing.lg,
+        width: '100%',
+      },
+      recordingSection: {
+        alignItems: 'center',
+        paddingVertical: spacing.xxl,
+        marginBottom: spacing.xxl,
+        backgroundColor: colors.surface,
+        borderRadius: spacing.borderRadius.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+      },
+      recordingTime: {
+        ...textStyles.h1,
+        color: colors.text,
+        marginBottom: spacing.xl,
+      },
+      controlsContainer: {
+        alignItems: 'center',
+        marginBottom: spacing.lg,
+      },
+      recordButton: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: colors.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...shadows.heavy,
+      },
+      recordingButton: {
+        backgroundColor: colors.primary,
+      },
+      pausedButton: {
+        backgroundColor: colors.warning,
+      },
+      recordingControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xl,
+      },
+      controlButton: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: colors.backgroundPrimary,
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...shadows.light,
+      },
+      completedControls: {
+        flexDirection: 'row',
+        gap: spacing.lg,
+      },
+      completedButton: {
+        minWidth: 120,
+      },
+      statusText: {
+        ...textStyles.body1,
+        color: colors.accent,
+        textAlign: 'center',
+      },
+      recordingsSection: {
+        marginBottom: spacing.xxl,
+      },
+      sectionTitle: {
+        ...textStyles.h2,
+        color: colors.text,
+        marginBottom: spacing.lg,
+      },
+      emptyState: {
+        alignItems: 'center',
+        paddingVertical: spacing.xxl + spacing.lg,
+      },
+      emptyStateText: {
+        ...textStyles.body1,
+        color: colors.textSecondary,
+        marginTop: spacing.md,
+      },
+    });
+
   // 渲染咒语控制按钮
   const renderRecordingControls = () => {
+    const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
+
     if (audioState.isRecording && !audioState.isPaused) {
       return (
-        <View style={styles.recordingControls}>
-          <TouchableOpacity style={styles.controlButton} onPress={handlePauseRecording}>
-            <Icon name="pause" size={24} color="#7572B7" />
+        <View style={dynamicStyles.recordingControls}>
+          <TouchableOpacity style={dynamicStyles.controlButton} onPress={handlePauseRecording}>
+            <Icon name="pause" size={24} color={colors.primary} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.recordButton, styles.recordingButton]}
+            style={[dynamicStyles.recordButton, dynamicStyles.recordingButton]}
             onPress={handleStopRecording}
           >
-            <Icon name="stop" size={32} color="#FFFFFF" />
+            <Icon name="stop" size={32} color={colors.buttonText} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton} onPress={cancelRecording}>
-            <Icon name="close" size={24} color="#FF6B6B" />
+          <TouchableOpacity style={dynamicStyles.controlButton} onPress={cancelRecording}>
+            <Icon name="close" size={24} color={colors.error} />
           </TouchableOpacity>
         </View>
       );
@@ -527,20 +715,20 @@ export function RecordScreen() {
 
     if (audioState.isRecording && audioState.isPaused) {
       return (
-        <View style={styles.recordingControls}>
-          <TouchableOpacity style={styles.controlButton} onPress={handleResumeRecording}>
-            <Icon name="play" size={24} color="#7572B7" />
+        <View style={dynamicStyles.recordingControls}>
+          <TouchableOpacity style={dynamicStyles.controlButton} onPress={handleResumeRecording}>
+            <Icon name="play" size={24} color={colors.primary} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.recordButton, styles.pausedButton]}
+            style={[dynamicStyles.recordButton, dynamicStyles.pausedButton]}
             onPress={handleStopRecording}
           >
-            <Icon name="stop" size={32} color="#FFFFFF" />
+            <Icon name="stop" size={32} color={colors.buttonText} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.controlButton} onPress={cancelRecording}>
-            <Icon name="close" size={24} color="#FF6B6B" />
+          <TouchableOpacity style={dynamicStyles.controlButton} onPress={cancelRecording}>
+            <Icon name="close" size={24} color={colors.error} />
           </TouchableOpacity>
         </View>
       );
@@ -548,7 +736,7 @@ export function RecordScreen() {
 
     if (audioState.isRecording === false && recordingTime > 0) {
       return (
-        <View style={styles.completedControls}>
+        <View style={dynamicStyles.completedControls}>
           <Button
             label="重新录制"
             variant="outline"
@@ -564,14 +752,14 @@ export function RecordScreen() {
                 Alert.alert('错误', error.message || '重置咒语失败');
               }
             }}
-            style={styles.completedButton}
+            style={dynamicStyles.completedButton}
           />
 
           <Button
             label="保存咒语"
             variant="primary"
             onPress={saveRecording}
-            style={styles.completedButton}
+            style={dynamicStyles.completedButton}
           />
         </View>
       );
@@ -579,18 +767,23 @@ export function RecordScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.recordButton}
+        style={dynamicStyles.recordButton}
         onPress={handleStartRecording}
         activeOpacity={0.8}
       >
-        <Icon name="mic" size={32} color="#FFFFFF" />
+        <Icon name="mic" size={32} color={colors.buttonText} />
       </TouchableOpacity>
     );
   };
 
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
+
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View style={[dynamicStyles.container, { paddingBottom: insets.bottom }]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
 
       <TopNavigationBar
         title="咒语"
@@ -599,41 +792,41 @@ export function RecordScreen() {
       />
 
       <KeyboardAwareScrollView
-        style={styles.content}
+        style={dynamicStyles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         extraScrollHeight={20}
       >
         {/* 文稿信息 */}
-        <View style={styles.scriptSection}>
-          <View style={styles.titleContainer}>
-            <View style={styles.titleInputContainer}>
+        <View style={dynamicStyles.scriptSection}>
+          <View style={dynamicStyles.titleContainer}>
+            <View style={dynamicStyles.titleInputContainer}>
               <InputText
                 label="咒语标题"
                 placeholder="输入咒语标题"
                 value={title}
                 onChangeText={setTitle}
                 disabled={audioState.isRecording}
-                style={styles.titleInput}
+                style={dynamicStyles.titleInput}
                 testID="input-text-input"
               />
             </View>
             <TouchableOpacity
-              style={styles.aiButton}
+              style={dynamicStyles.aiButton}
               onPress={generateScriptFromAI}
               disabled={isGeneratingScript || audioState.isRecording}
               testID="ai-generate-button"
             >
               {isGeneratingScript ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={colors.buttonText} />
               ) : (
-                <Icon name="sparkles" size={20} color="#FFFFFF" />
+                <Icon name="sparkles" size={20} color={colors.buttonText} />
               )}
             </TouchableOpacity>
           </View>
 
-          <View style={styles.scriptContainer}>
+          <View style={dynamicStyles.scriptContainer}>
             <InputTextarea
               label="文稿内容"
               placeholder="输入要录制的文稿内容（可选）"
@@ -648,22 +841,23 @@ export function RecordScreen() {
         </View>
 
         {/* 咒语控制区域 */}
-        <View style={styles.recordingSection}>
+        <View style={dynamicStyles.recordingSection}>
           {/* 波形可视化 */}
           <WaveformVisualizer
             isRecording={audioState.isRecording && !audioState.isPaused}
             amplitude={amplitude}
+            colors={colors}
           />
 
           {/* 咒语时间 */}
-          <Text style={styles.recordingTime}>{formatTime(recordingTime)}</Text>
+          <Text style={dynamicStyles.recordingTime}>{formatTime(recordingTime)}</Text>
 
           {/* 咒语控制按钮 */}
-          <View style={styles.controlsContainer}>{renderRecordingControls()}</View>
+          <View style={dynamicStyles.controlsContainer}>{renderRecordingControls()}</View>
 
           {/* 咒语状态提示 */}
           {(audioState.isRecording || recordingTime > 0) && (
-            <Text style={styles.statusText}>
+            <Text style={dynamicStyles.statusText}>
               {audioState.isRecording && !audioState.isPaused && '正在咒语...'}
               {audioState.isRecording && audioState.isPaused && '咒语已暂停'}
               {!audioState.isRecording && recordingTime > 0 && '咒语完成'}
@@ -672,13 +866,13 @@ export function RecordScreen() {
         </View>
 
         {/* 咒语文件列表 */}
-        <View style={styles.recordingsSection}>
-          <Text style={styles.sectionTitle}>咒语文件</Text>
+        <View style={dynamicStyles.recordingsSection}>
+          <Text style={dynamicStyles.sectionTitle}>咒语文件</Text>
 
           {recordings.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Icon name="mic-outline" size={48} color="#C8C5D0" />
-              <Text style={styles.emptyStateText}>暂无咒语文件</Text>
+            <View style={dynamicStyles.emptyState}>
+              <Icon name="mic-outline" size={48} color={colors.textSecondary} />
+              <Text style={dynamicStyles.emptyStateText}>暂无咒语文件</Text>
             </View>
           ) : (
             recordings.map(item => (
@@ -687,6 +881,9 @@ export function RecordScreen() {
                 item={item}
                 onPlay={playRecording}
                 onDelete={handleDeleteRecording}
+                colors={colors}
+                textStyles={textStyles}
+                spacing={spacing}
               />
             ))
           )}
@@ -705,228 +902,3 @@ export function RecordScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FDFCFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E3F1',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontFamily: 'Rubik',
-    fontWeight: '600',
-    color: '#393640',
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 16,
-  },
-  headerRight: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  scriptSection: {
-    marginTop: 16,
-    marginBottom: 32,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    width: '100%',
-  },
-  titleInputContainer: {
-    flex: 1,
-  },
-  titleInput: {
-    width: '100%',
-  },
-  aiButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: '#7572B7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-    marginBottom: 8,
-  },
-  scriptContainer: {
-    marginTop: 16,
-    width: '100%',
-  },
-  recordingSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    marginBottom: 32,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E3E3F1',
-  },
-  waveformContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 60,
-    marginBottom: 24,
-    paddingHorizontal: 20,
-  },
-  waveformBar: {
-    width: 3,
-    marginHorizontal: 1,
-    borderRadius: 2,
-  },
-  recordingTime: {
-    fontSize: 32,
-    fontFamily: 'Rubik',
-    fontWeight: '600',
-    color: '#393640',
-    marginBottom: 24,
-  },
-  controlsContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  recordButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FF6B6B',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  recordingButton: {
-    backgroundColor: '#FF3B30',
-  },
-  pausedButton: {
-    backgroundColor: '#FF9500',
-  },
-  recordingControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 24,
-  },
-  controlButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E3E3F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  completedControls: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  completedButton: {
-    minWidth: 120,
-  },
-  statusText: {
-    fontSize: 15,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#7572B7',
-    textAlign: 'center',
-  },
-  recordingsSection: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: 'Rubik',
-    fontWeight: '600',
-    color: '#393640',
-    marginBottom: 16,
-  },
-  recordingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E3E3F1',
-  },
-  recordingIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#E3E3F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  recordingInfo: {
-    flex: 1,
-  },
-  recordingTitle: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '500',
-    color: '#393640',
-    marginBottom: 4,
-  },
-  recordingMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  recordingMetaText: {
-    fontSize: 13,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#535059',
-  },
-  recordingMetaSeparator: {
-    fontSize: 13,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#D2CED9',
-    marginHorizontal: 6,
-  },
-  recordingActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  recordingActionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: '#F8F8F8',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 48,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#C8C5D0',
-    marginTop: 12,
-  },
-});

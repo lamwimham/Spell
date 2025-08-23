@@ -1,4 +1,4 @@
-# SpellApp - React Native iOS 应用
+# Spell - React Native iOS 应用
 
 ## Core Features
 

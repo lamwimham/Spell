@@ -6,20 +6,16 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
-  PanResponder,
   Image,
   ScrollView,
   SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ToggleSwitch } from './ToggleSwitch';
+import { useTheme } from '../../hooks/useTheme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = SCREEN_WIDTH * 0.80; // 75%屏幕宽度
-const PAN_RESPONDER_THRESHOLD = 15; // 降低阈值，更容易触发
-const PAN_RESPONDER_VELOCITY_THRESHOLD = -0.3; // 降低速度阈值
-const PAN_RESPONDER_DISTANCE_THRESHOLD = -30; // 降低距离阈值
+const DRAWER_WIDTH = SCREEN_WIDTH * 0.8; // 75%屏幕宽度
 
 interface DrawerPanelProps {
   isVisible: boolean;
@@ -60,7 +56,7 @@ interface Settings {
  * 包含用户信息、打卡记录、系统设置
  */
 export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps) {
-  const insets = useSafeAreaInsets();
+  const { colors, textStyles, spacing, shadows } = useTheme();
   const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -138,6 +134,8 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
   }, [isVisible, translateX, overlayOpacity]);
 
   // 使用PanResponder替代PanGestureHandler - 增强手势响应
+  // 注释掉暂时未使用的手势处理代码
+  /*
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -185,6 +183,7 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
       },
     }),
   ).current;
+  */
 
   const updateSetting = (key: keyof Settings, value: boolean) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -192,85 +191,94 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
 
   if (!isVisible) return null;
 
+  // 创建动态样式
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
+
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View style={dynamicStyles.container} pointerEvents="box-none">
       {/* 背景遮罩 */}
       <Animated.View
         style={[
-          styles.overlay,
+          dynamicStyles.overlay,
           {
             opacity: overlayOpacity,
           },
         ]}
       >
-        <TouchableOpacity style={styles.overlayTouchable} onPress={onClose} activeOpacity={1} />
+        <TouchableOpacity
+          style={dynamicStyles.overlayTouchable}
+          onPress={onClose}
+          activeOpacity={1}
+        />
       </Animated.View>
 
       {/* 抽屉面板 */}
       <Animated.View
         style={[
-          styles.drawer,
+          dynamicStyles.drawer,
           {
             transform: [{ translateX }],
           },
         ]}
       >
         <SafeAreaView style={{ flex: 1 }}>
-          <View style={styles.drawerHeader}>
-            <View style={styles.avatarContainer}>
-              <Image source={{ uri: userData.avatar }} style={styles.avatar} />
+          <View style={dynamicStyles.drawerHeader}>
+            <View style={dynamicStyles.avatarContainer}>
+              <Image source={{ uri: userData.avatar }} style={dynamicStyles.avatar} />
             </View>
 
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Icon name="close" size={24} color="#535059" />
+            <TouchableOpacity style={dynamicStyles.closeButton} onPress={onClose}>
+              <Icon name="close" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
-          
-          <Text style={styles.userName}>{userData.name}</Text>
-          <Text style={styles.userBio}>{userData.bio}</Text>
-          <Text style={styles.joinDate}>{userData.joinDate}</Text>
-          
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContent}
+
+          <Text style={dynamicStyles.userName}>{userData.name}</Text>
+          <Text style={dynamicStyles.userBio}>{userData.bio}</Text>
+          <Text style={dynamicStyles.joinDate}>{userData.joinDate}</Text>
+
+          <ScrollView
+            style={dynamicStyles.scrollView}
+            contentContainerStyle={dynamicStyles.scrollViewContent}
             showsVerticalScrollIndicator={true}
           >
             {/* 统计数据 */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>学习统计</Text>
-              <View style={styles.statsGrid}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{userStats.totalDays}</Text>
-                  <Text style={styles.statLabel}>总天数</Text>
+            <View style={dynamicStyles.section}>
+              <Text style={dynamicStyles.sectionTitle}>学习统计</Text>
+              <View style={dynamicStyles.statsGrid}>
+                <View style={dynamicStyles.statItem}>
+                  <Text style={dynamicStyles.statNumber}>{userStats.totalDays}</Text>
+                  <Text style={dynamicStyles.statLabel}>总天数</Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{userStats.currentStreak}</Text>
-                  <Text style={styles.statLabel}>连续天数</Text>
+                <View style={dynamicStyles.statItem}>
+                  <Text style={dynamicStyles.statNumber}>{userStats.currentStreak}</Text>
+                  <Text style={dynamicStyles.statLabel}>连续天数</Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{userStats.totalRecordings}</Text>
-                  <Text style={styles.statLabel}>咒语数</Text>
+                <View style={dynamicStyles.statItem}>
+                  <Text style={dynamicStyles.statNumber}>{userStats.totalRecordings}</Text>
+                  <Text style={dynamicStyles.statLabel}>咒语数</Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{userStats.totalListeningTime}</Text>
-                  <Text style={styles.statLabel}>收听时长</Text>
+                <View style={dynamicStyles.statItem}>
+                  <Text style={dynamicStyles.statNumber}>{userStats.totalListeningTime}</Text>
+                  <Text style={dynamicStyles.statLabel}>收听时长</Text>
                 </View>
               </View>
             </View>
 
             {/* 打卡记录 */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>最近打卡</Text>
-              <View style={styles.checkInList}>
+            <View style={dynamicStyles.section}>
+              <Text style={dynamicStyles.sectionTitle}>最近打卡</Text>
+              <View style={dynamicStyles.checkInList}>
                 {checkInRecords.map((record, index) => (
-                  <View key={index} style={styles.checkInItem}>
-                    <View style={styles.checkInDate}>
-                      <Text style={styles.checkInDateText}>{record.date}</Text>
+                  <View key={index} style={dynamicStyles.checkInItem}>
+                    <View style={dynamicStyles.checkInDate}>
+                      <Text style={dynamicStyles.checkInDateText}>{record.date}</Text>
                     </View>
                     <View
                       style={[
-                        styles.checkInStatus,
-                        record.completed ? styles.checkInCompleted : styles.checkInMissed,
+                        dynamicStyles.checkInStatus,
+                        record.completed
+                          ? dynamicStyles.checkInCompleted
+                          : dynamicStyles.checkInMissed,
                       ]}
                     >
                       <Icon
@@ -279,7 +287,7 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
                         color={record.completed ? '#4CAF50' : '#FF6B6B'}
                       />
                     </View>
-                    <Text style={styles.checkInDetails}>
+                    <Text style={dynamicStyles.checkInDetails}>
                       {record.completed
                         ? `${record.recordings}咒语 ${record.listeningTime}分钟`
                         : '未完成'}
@@ -290,13 +298,13 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
             </View>
 
             {/* 系统设置 */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>系统设置</Text>
+            <View style={dynamicStyles.section}>
+              <Text style={dynamicStyles.sectionTitle}>系统设置</Text>
 
-              <View style={styles.settingItem}>
-                <View style={styles.settingInfo}>
-                  <Icon name="notifications-outline" size={20} color="#7572B7" />
-                  <Text style={styles.settingLabel}>推送通知</Text>
+              <View style={dynamicStyles.settingItem}>
+                <View style={dynamicStyles.settingInfo}>
+                  <Icon name="notifications-outline" size={20} color={colors.primary} />
+                  <Text style={dynamicStyles.settingLabel}>推送通知</Text>
                 </View>
                 <ToggleSwitch
                   value={settings.notifications}
@@ -304,10 +312,10 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
                 />
               </View>
 
-              <View style={styles.settingItem}>
-                <View style={styles.settingInfo}>
-                  <Icon name="moon-outline" size={20} color="#7572B7" />
-                  <Text style={styles.settingLabel}>深色模式</Text>
+              <View style={dynamicStyles.settingItem}>
+                <View style={dynamicStyles.settingInfo}>
+                  <Icon name="moon-outline" size={20} color={colors.primary} />
+                  <Text style={dynamicStyles.settingLabel}>深色模式</Text>
                 </View>
                 <ToggleSwitch
                   value={settings.darkMode}
@@ -315,10 +323,10 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
                 />
               </View>
 
-              <View style={styles.settingItem}>
-                <View style={styles.settingInfo}>
-                  <Icon name="alarm-outline" size={20} color="#7572B7" />
-                  <Text style={styles.settingLabel}>每日提醒</Text>
+              <View style={dynamicStyles.settingItem}>
+                <View style={dynamicStyles.settingInfo}>
+                  <Icon name="alarm-outline" size={20} color={colors.primary} />
+                  <Text style={dynamicStyles.settingLabel}>每日提醒</Text>
                 </View>
                 <ToggleSwitch
                   value={settings.dailyReminder}
@@ -328,28 +336,41 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
             </View>
 
             {/* 底部菜单 */}
-            <View style={styles.section}>
+            <View style={dynamicStyles.section}>
               <TouchableOpacity
-                style={styles.menuItem}
+                style={dynamicStyles.menuItem}
+                onPress={() => {
+                  onNavigate?.('ClockIn');
+                  onClose();
+                }}
+              >
+                <Icon name="calendar-outline" size={20} color={colors.textSecondary} />
+                <Text style={dynamicStyles.menuItemText}>每日打卡</Text>
+                <Icon name="chevron-forward" size={16} color={colors.textTertiary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={dynamicStyles.menuItem}
                 onPress={() => {
                   onNavigate?.('Settings');
                   onClose();
                 }}
               >
-                <Icon name="settings-outline" size={20} color="#535059" />
-                <Text style={styles.menuItemText}>高级设置</Text>
-                <Icon name="chevron-forward" size={16} color="#C8C5D0" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem}>
-                <Icon name="help-circle-outline" size={20} color="#535059" />
-                <Text style={styles.menuItemText}>帮助与反馈</Text>
-                <Icon name="chevron-forward" size={16} color="#C8C5D0" />
+                <Icon name="settings-outline" size={20} color={colors.textSecondary} />
+                <Text style={dynamicStyles.menuItemText}>高级设置</Text>
+                <Icon name="chevron-forward" size={16} color={colors.textTertiary} />
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuItem}>
-                <Icon name="information-circle-outline" size={20} color="#535059" />
-                <Text style={styles.menuItemText}>关于应用</Text>
-                <Icon name="chevron-forward" size={16} color="#C8C5D0" />
+              <TouchableOpacity style={dynamicStyles.menuItem}>
+                <Icon name="help-circle-outline" size={20} color={colors.textSecondary} />
+                <Text style={dynamicStyles.menuItemText}>帮助与反馈</Text>
+                <Icon name="chevron-forward" size={16} color={colors.textTertiary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity style={dynamicStyles.menuItem}>
+                <Icon name="information-circle-outline" size={20} color={colors.textSecondary} />
+                <Text style={dynamicStyles.menuItemText}>关于应用</Text>
+                <Icon name="chevron-forward" size={16} color={colors.textTertiary} />
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -359,190 +380,171 @@ export function DrawerPanel({ isVisible, onClose, onNavigate }: DrawerPanelProps
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  overlayTouchable: {
-    flex: 1,
-  },
-  drawer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    width: DRAWER_WIDTH,
-    backgroundColor: 'rgba(253, 252, 255, 0.95)',
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  drawerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E3E3F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  userName: {
-    fontSize: 24,
-    fontFamily: 'Rubik',
-    fontWeight: '600',
-    color: '#393640',
-    marginBottom: 4,
-    paddingHorizontal: 20,
-  },
-  userBio: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#7572B7',
-    marginBottom: 8,
-    paddingHorizontal: 20,
-  },
-  joinDate: {
-    fontSize: 14,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#C8C5D0',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingBottom: 50,
-  },
-  section: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E3F1',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'Rubik',
-    fontWeight: '600',
-    color: '#393640',
-    marginBottom: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E3E3F1',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontFamily: 'Rubik',
-    fontWeight: '700',
-    color: '#7572B7',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#535059',
-    textAlign: 'center',
-  },
-  checkInList: {
-    gap: 8,
-  },
-  checkInItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  checkInDate: {
-    width: 60,
-  },
-  checkInDateText: {
-    fontSize: 12,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#535059',
-  },
-  checkInStatus: {
-    marginRight: 12,
-  },
-  checkInCompleted: {},
-  checkInMissed: {},
-  checkInDetails: {
-    fontSize: 12,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#C8C5D0',
-    flex: 1,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-  settingInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  settingLabel: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#393640',
-    marginLeft: 12,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  menuItemText: {
-    fontSize: 16,
-    fontFamily: 'Rubik',
-    fontWeight: '400',
-    color: '#535059',
-    marginLeft: 12,
-    flex: 1,
-  },
-});
+/**
+ * 创建动态样式的函数
+ */
+const createStyles = ({ colors, textStyles, spacing, shadows }: any) =>
+  StyleSheet.create({
+    container: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    overlayTouchable: {
+      flex: 1,
+    },
+    drawer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      width: DRAWER_WIDTH,
+      backgroundColor: colors.surface,
+      ...shadows.heavy,
+    },
+    drawerHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+    },
+    avatarContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.backgroundPrimary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+    },
+    closeButton: {
+      padding: spacing.sm,
+    },
+    userName: {
+      ...textStyles.h2,
+      color: colors.text,
+      marginBottom: spacing.xs,
+      paddingHorizontal: spacing.lg,
+    },
+    userBio: {
+      ...textStyles.body1,
+      color: colors.primary,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
+    joinDate: {
+      ...textStyles.caption,
+      color: colors.textTertiary,
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollViewContent: {
+      paddingBottom: 50,
+    },
+    section: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    sectionTitle: {
+      ...textStyles.h3,
+      color: colors.text,
+      marginBottom: spacing.md,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    statItem: {
+      width: '48%',
+      backgroundColor: colors.backgroundElevated,
+      borderRadius: spacing.borderRadius.md,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...shadows.light,
+    },
+    statNumber: {
+      ...textStyles.h2,
+      color: colors.primary,
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      ...textStyles.caption,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    checkInList: {
+      gap: spacing.sm,
+    },
+    checkInItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+    },
+    checkInDate: {
+      width: 60,
+    },
+    checkInDateText: {
+      ...textStyles.caption,
+      color: colors.textSecondary,
+    },
+    checkInStatus: {
+      marginRight: spacing.md,
+    },
+    checkInCompleted: {},
+    checkInMissed: {},
+    checkInDetails: {
+      ...textStyles.caption,
+      color: colors.textTertiary,
+      flex: 1,
+    },
+    settingItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.md,
+    },
+    settingInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    settingLabel: {
+      ...textStyles.body1,
+      color: colors.text,
+      marginLeft: spacing.md,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+    },
+    menuItemText: {
+      ...textStyles.body1,
+      color: colors.textSecondary,
+      marginLeft: spacing.md,
+      flex: 1,
+    },
+  });

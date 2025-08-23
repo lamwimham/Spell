@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '../components/ui/Button';
+import { useTheme } from '../hooks/useTheme';
 
 type RootStackParamList = {
   ClockIn: { id?: string };
@@ -15,6 +16,7 @@ type ClockInScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>
 export default function ClockInScreen() {
   const route = useRoute<ClockInScreenRouteProp>();
   const navigation = useNavigation<ClockInScreenNavigationProp>();
+  const { colors, textStyles, spacing, shadows } = useTheme();
   const { id } = route.params || {};
 
   const handleClockIn = () => {
@@ -26,35 +28,43 @@ export default function ClockInScreen() {
     navigation.goBack();
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>⏰ 打卡时间</Text>
-      <Text style={styles.subtitle}>记得完成今天的打卡任务哦！</Text>
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
 
-      <Button label="确认打卡" onPress={handleClockIn} style={styles.button} />
+  return (
+    <View style={dynamicStyles.container}>
+      <Text style={dynamicStyles.title}>⏰ 打卡时间</Text>
+      <Text style={dynamicStyles.subtitle}>记得完成今天的打卡任务哦！</Text>
+
+      <Button label="确认打卡" onPress={handleClockIn} style={dynamicStyles.button} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
-  },
-  button: {
-    width: '80%',
-  },
-});
+/**
+ * 创建动态样式的函数
+ */
+const createStyles = ({ colors, textStyles, spacing }: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    title: {
+      ...textStyles.h2,
+      color: colors.text,
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    subtitle: {
+      ...textStyles.body1,
+      color: colors.textSecondary,
+      marginBottom: spacing.xl,
+      textAlign: 'center',
+    },
+    button: {
+      width: '80%',
+    },
+  });

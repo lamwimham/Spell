@@ -16,6 +16,7 @@ import { useQwenChatWithDynamicSystemPrompt } from '../hooks/useQwen';
 import { useNavigation } from '@react-navigation/native';
 import { TopNavigationBar } from '../components/ui/TopNavigationBar';
 import { SystemPromptSelector } from '../components/ui/SystemPromptSelector';
+import { useTheme } from '../hooks/useTheme';
 
 type Message = {
   id: string;
@@ -26,6 +27,7 @@ type Message = {
 
 const ChatScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const { colors, textStyles, spacing, shadows } = useTheme();
   const {
     sendMessage,
     lastResponse,
@@ -84,34 +86,46 @@ const ChatScreen: React.FC = () => {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  const renderItem = ({ item }: { item: Message }) => (
-    <View style={[styles.bubble, item.isUser ? styles.userBubble : styles.aiBubble]}>
-      <Text style={styles.messageText}>{item.text}</Text>
-    </View>
-  );
+  const renderItem = ({ item }: { item: Message }) => {
+    const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
 
-  const emptyState = useMemo(
-    () => (
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyStateText}>和AI开始聊天吧！输入消息并发送。</Text>
+    return (
+      <View
+        style={[
+          dynamicStyles.bubble,
+          item.isUser ? dynamicStyles.userBubble : dynamicStyles.aiBubble,
+        ]}
+      >
+        <Text style={dynamicStyles.messageText}>{item.text}</Text>
       </View>
-    ),
-    [],
-  );
+    );
+  };
+
+  const emptyState = useMemo(() => {
+    const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
+
+    return (
+      <View style={dynamicStyles.emptyState}>
+        <Text style={dynamicStyles.emptyStateText}>和AI开始聊天吧！输入消息并发送。</Text>
+      </View>
+    );
+  }, [colors, textStyles, spacing, shadows]);
+
+  const dynamicStyles = createStyles({ colors, textStyles, spacing, shadows });
 
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <TopNavigationBar
         title="AI 助手"
         showBackButton={true}
         onBackPress={() => navigation.goBack()}
         rightIconName="settings-outline"
         onRightIconPress={() => setIsPromptSelectorVisible(true)}
-        iconColor="#7572B7"
+        iconColor={colors.primary}
       />
 
       <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
+        style={dynamicStyles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       >
@@ -120,33 +134,37 @@ const ChatScreen: React.FC = () => {
           data={messages}
           renderItem={renderItem}
           keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={dynamicStyles.listContent}
           ListEmptyComponent={emptyState}
         />
 
         {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>错误: {error}</Text>
+          <View style={dynamicStyles.errorContainer}>
+            <Text style={dynamicStyles.errorText}>错误: {error}</Text>
           </View>
         ) : null}
 
-        <View style={styles.inputArea}>
+        <View style={dynamicStyles.inputArea}>
           <TextInput
-            style={styles.input}
+            style={dynamicStyles.input}
             value={input}
             onChangeText={setInput}
             placeholder="输入消息..."
+            placeholderTextColor={colors.textTertiary}
             multiline
           />
           <TouchableOpacity
-            style={styles.sendButton}
+            style={[
+              dynamicStyles.sendButton,
+              (loading || input.trim().length === 0) && dynamicStyles.sendButtonDisabled,
+            ]}
             onPress={handleSend}
             disabled={loading || input.trim().length === 0}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.buttonText} />
             ) : (
-              <Text style={styles.sendButtonText}>发送</Text>
+              <Text style={dynamicStyles.sendButtonText}>发送</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -177,93 +195,109 @@ const ChatScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FDFCFF',
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  listContent: {
-    padding: 12,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  bubble: {
-    padding: 12,
-    borderRadius: 16,
-    marginVertical: 6,
-    maxWidth: '78%',
-    // 默认背景，具体 colours 会根据 isUser 区分
-  },
-  userBubble: {
-    backgroundColor: '#e1f5fe',
-    alignSelf: 'flex-end',
-  },
-  aiBubble: {
-    backgroundColor: '#ffffff',
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  messageText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  errorContainer: {
-    position: 'absolute',
-    top: 8,
-    left: 12,
-    right: 12,
-    backgroundColor: '#ffebee',
-    padding: 10,
-    borderRadius: 8,
-    zIndex: 1,
-  },
-  errorText: {
-    color: '#c62828',
-  },
-  inputArea: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: '#fff',
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 120,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  sendButton: {
-    marginLeft: 8,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#1976d2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 40,
-  },
-  emptyStateText: {
-    color: '#888',
-  },
-});
+/**
+ * 创建动态样式的函数
+ */
+const createStyles = ({ colors, textStyles, spacing, shadows }: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    listContent: {
+      padding: spacing.padding.card,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    bubble: {
+      padding: spacing.padding.card,
+      borderRadius: spacing.borderRadius.md,
+      marginVertical: spacing.xs,
+      maxWidth: '78%',
+    },
+    userBubble: {
+      backgroundColor: colors.primary,
+      alignSelf: 'flex-end',
+      ...shadows.light,
+    },
+    aiBubble: {
+      backgroundColor: colors.surface,
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderColor: colors.border,
+      ...shadows.light,
+    },
+    messageText: {
+      ...textStyles.body1,
+      color: colors.text,
+    },
+    errorContainer: {
+      position: 'absolute',
+      top: spacing.sm,
+      left: spacing.padding.card,
+      right: spacing.padding.card,
+      backgroundColor: colors.error + '20', // 20% opacity
+      padding: spacing.padding.input,
+      borderRadius: spacing.borderRadius.sm,
+      zIndex: 1,
+      ...shadows.medium,
+    },
+    errorText: {
+      ...textStyles.body2,
+      color: colors.error,
+    },
+    inputArea: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    input: {
+      flex: 1,
+      minHeight: 40,
+      maxHeight: 120,
+      ...textStyles.body1,
+      backgroundColor: colors.backgroundElevated,
+      borderRadius: spacing.borderRadius.lg,
+      paddingHorizontal: spacing.padding.input,
+      paddingVertical: spacing.sm,
+      borderWidth: 1,
+      borderColor: colors.border,
+      color: colors.text,
+    },
+    sendButton: {
+      marginLeft: spacing.sm,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.medium,
+    },
+    sendButtonDisabled: {
+      backgroundColor: colors.textTertiary,
+    },
+    sendButtonText: {
+      ...textStyles.button,
+      color: colors.buttonText,
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: spacing.xl,
+      paddingHorizontal: spacing.lg,
+    },
+    emptyStateText: {
+      ...textStyles.body1,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+  });
 
 export default ChatScreen;
