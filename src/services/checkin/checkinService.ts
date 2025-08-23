@@ -3,8 +3,9 @@
  * 提供打卡记录、连续天数统计、历史查询等功能
  */
 
-import { CheckInRepository } from '../../database/repositories/CheckInRepository';
+import { CheckInRepository, CheckInData as RepoCheckInData } from '../../database/repositories/CheckInRepository';
 import { UserRepository } from '../../database/repositories/UserRepository';
+import CheckIn from '../../database/models/CheckIn';
 
 // 打卡类型枚举
 export type CheckInType = 'daily' | 'study' | 'exercise' | 'work' | 'custom';
@@ -77,19 +78,21 @@ export class CheckInService {
       }
 
       // 检查今日是否已打卡
-      const todayCheckIn = await CheckInRepository.getTodayCheckIn(data.userId, data.type);
-      if (todayCheckIn) {
+      const todayCheckedIn = await CheckInRepository.hasTodayCheckIn(data.userId);
+      if (todayCheckedIn) {
         return { success: false, message: '今日已打卡，请明天再来' };
       }
 
       // 创建打卡记录
-      const checkIn = await CheckInRepository.create({
+      // 转换数据结构以匹配仓库期望的格式
+      const repoData: RepoCheckInData = {
         userId: data.userId,
-        type: data.type,
-        note: data.note,
-        location: data.location,
-        metadata: data.metadata,
-      });
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD 格式
+        checkInTime: Date.now(),
+        notes: data.note,
+      };
+
+      const checkIn = await CheckInRepository.create(repoData);
 
       return {
         success: true,
@@ -105,10 +108,11 @@ export class CheckInService {
   /**
    * 检查今日是否已打卡
    */
-  static async isTodayCheckedIn(userId: string, type: CheckInType = 'daily'): Promise<boolean> {
+  static async isTodayCheckedIn(userId: string, _type: CheckInType = 'daily'): Promise<boolean> {
     try {
-      const todayCheckIn = await CheckInRepository.getTodayCheckIn(userId, type);
-      return todayCheckIn !== null;
+      // 对于这个实现，我们忽略type参数，因为CheckInRepository只有一种打卡类型
+      const todayCheckedIn = await CheckInRepository.hasTodayCheckIn(userId);
+      return todayCheckedIn;
     } catch (error) {
       console.error('检查今日打卡状态失败:', error);
       return false;
@@ -120,7 +124,7 @@ export class CheckInService {
    */
   static async getUserStats(userId: string, type: CheckInType = 'daily'): Promise<CheckInStats> {
     try {
-      const checkIns = await CheckInRepository.getAllByUser(userId, type);
+      const checkIns = await CheckInRepository.getAllByUser(userId);
 
       if (checkIns.length === 0) {
         return {
@@ -151,7 +155,7 @@ export class CheckInService {
 
       const thisMonthDays = checkIns.filter(checkIn => checkIn.createdAt >= thisMonthStart).length;
 
-      // 按类型统计
+      // 按类型统计（简化实现，因为仓库不支持多种类型）
       const checkInTypes = this.getCheckInTypeStats(checkIns);
 
       return {
@@ -183,7 +187,8 @@ export class CheckInService {
    */
   static async getUserHistory(query: CheckInHistoryQuery) {
     try {
-      return await CheckInRepository.getHistory(query);
+      // 简化实现，因为仓库没有完全匹配的方法
+      return await CheckInRepository.getAllByUser(query.userId);
     } catch (error) {
       console.error('获取打卡历史失败:', error);
       return [];
@@ -193,9 +198,9 @@ export class CheckInService {
   /**
    * 获取连续打卡数据
    */
-  static async getStreakData(userId: string, type: CheckInType = 'daily'): Promise<StreakData> {
+  static async getStreakData(userId: string, _type: CheckInType = 'daily'): Promise<StreakData> {
     try {
-      const checkIns = await CheckInRepository.getAllByUser(userId, type);
+      const checkIns = await CheckInRepository.getAllByUser(userId);
       return this.calculateStreak(checkIns);
     } catch (error) {
       console.error('获取连续打卡数据失败:', error);
@@ -260,22 +265,23 @@ export class CheckInService {
     userId: string,
     year: number,
     month: number,
-    type: CheckInType = 'daily',
+    _type: CheckInType = 'daily',
   ) {
     try {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0); // 当月最后一天
 
-      const checkIns = await CheckInRepository.getHistory({
-        userId,
-        type,
-        startDate,
-        endDate,
+      // 简化实现，因为仓库没有完全匹配的方法
+      const checkIns = await CheckInRepository.getAllByUser(userId);
+
+      // 过滤指定日期范围内的打卡记录
+      const filteredCheckIns = checkIns.filter(checkIn => {
+        return checkIn.createdAt >= startDate && checkIn.createdAt <= endDate;
       });
 
       // 转换为日历格式
       const calendarData: Record<string, boolean> = {};
-      checkIns.forEach(checkIn => {
+      filteredCheckIns.forEach(checkIn => {
         const dateKey = checkIn.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
         calendarData[dateKey] = true;
       });
@@ -312,7 +318,7 @@ export class CheckInService {
   /**
    * 计算连续打卡天数
    */
-  private static calculateStreak(checkIns: any[]): StreakData {
+  private static calculateStreak(checkIns: CheckIn[]): StreakData {
     if (checkIns.length === 0) {
       return { current: 0, longest: 0, isActive: false };
     }
@@ -421,16 +427,13 @@ export class CheckInService {
   }
 
   /**
-   * 统计各类型打卡次数
+   * 统计各类型打卡次数（简化实现）
    */
-  private static getCheckInTypeStats(checkIns: any[]): Record<CheckInType, number> {
+  private static getCheckInTypeStats(checkIns: CheckIn[]): Record<CheckInType, number> {
     const stats = this.getEmptyCheckInTypes();
-
-    checkIns.forEach(checkIn => {
-      if (stats.hasOwnProperty(checkIn.type)) {
-        stats[checkIn.type as CheckInType]++;
-      }
-    });
+    
+    // 由于仓库不支持多种类型，我们将所有打卡都归类为daily类型
+    stats.daily = checkIns.length;
 
     return stats;
   }
