@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import InputText from '../ui/InputText';
+import { InputText } from '../ui/InputText';
 import Button from '../ui/Button';
 import ToggleSwitch from '../ui/ToggleSwitch';
 
